@@ -62,6 +62,8 @@ Kafka expone dos listeners porque el host cambia según el lugar desde donde se 
 
 `KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS` registra `kafka:29092` como la dirección inicial que Kafbat UI usa para descubrir el broker. Kafbat UI observa Kafka directamente; no se conecta a los controllers ni reemplaza a los consumers de los backends.
 
+Si recién estás comenzando con Kafka, lee primero [Kafka desde cero aplicado a Z4 Event Commerce](docs/kafka-fundamentals.md). Explica brokers, topics, particiones, réplicas, offsets, consumer groups, confirmaciones, reintentos y DLT usando el flujo real del proyecto.
+
 La búsqueda de mensajes, el seguimiento mediante `correlationId`, las particiones, los offsets, los consumer groups y el diagnóstico se explican paso a paso en [docs/kafbat-ui-guide.md](docs/kafbat-ui-guide.md).
 
 Los reintentos limitados, los Dead Letter Topics y el procedimiento para revisar un mensaje que agotó sus intentos se explican en [docs/kafka-retries-dlt.md](docs/kafka-retries-dlt.md).
