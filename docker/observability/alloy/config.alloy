@@ -1,0 +1,80 @@
+local.file_match "auth_service" {
+  path_targets = [{
+    "__path__"    = "/var/log/z4/auth-service/*.log",
+    "environment" = "local",
+    "service_name" = "auth-service",
+  }]
+}
+
+local.file_match "order_service" {
+  path_targets = [{
+    "__path__"    = "/var/log/z4/order-service/*.log",
+    "environment" = "local",
+    "service_name" = "order-service",
+  }]
+}
+
+local.file_match "inventory_service" {
+  path_targets = [{
+    "__path__"    = "/var/log/z4/inventory-service/*.log",
+    "environment" = "local",
+    "service_name" = "inventory-service",
+  }]
+}
+
+local.file_match "payment_service" {
+  path_targets = [{
+    "__path__"    = "/var/log/z4/payment-service/*.log",
+    "environment" = "local",
+    "service_name" = "payment-service",
+  }]
+}
+
+loki.source.file "auth_service" {
+  targets    = local.file_match.auth_service.targets
+  forward_to = [loki.process.spring_boot.receiver]
+}
+
+loki.source.file "order_service" {
+  targets    = local.file_match.order_service.targets
+  forward_to = [loki.process.spring_boot.receiver]
+}
+
+loki.source.file "inventory_service" {
+  targets    = local.file_match.inventory_service.targets
+  forward_to = [loki.process.spring_boot.receiver]
+}
+
+loki.source.file "payment_service" {
+  targets    = local.file_match.payment_service.targets
+  forward_to = [loki.process.spring_boot.receiver]
+}
+
+loki.process "spring_boot" {
+  // Una entrada de Spring Boot comienza con su fecha. Las líneas siguientes
+  // pertenecen al mismo stack trace hasta encontrar una nueva fecha.
+  stage.multiline {
+    firstline     = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"
+    max_wait_time = "3s"
+  }
+
+  // Extrae la fecha escrita por Spring Boot al inicio de la entrada completa.
+  stage.regex {
+    expression = "^(?P<spring_timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+(?:Z|[+-]\\d{2}:\\d{2}))"
+  }
+
+  // Loki ordena por la hora real de la aplicación, no por la hora de lectura de Alloy.
+  stage.timestamp {
+    source            = "spring_timestamp"
+    format            = "RFC3339Nano"
+    action_on_failure = "skip"
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

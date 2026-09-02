@@ -1,0 +1,35 @@
+auth_enabled: false # Desactiva autenticación y multitenencia únicamente para el entorno local.
+
+server:
+  # Expone la API HTTP de Loki. Alloy envía logs a este puerto y Grafana envía consultas LogQL.
+  # Loki solo abre el puerto; la URL http://loki:3100 se configura en Alloy y Grafana.
+  http_listen_port: 3100
+
+common:
+  path_prefix: /loki # Carpeta base donde Loki almacena sus datos dentro del contenedor.
+  replication_factor: 1 # Mantiene una copia porque localmente existe una sola instancia de Loki.
+  ring:
+    instance_addr: 127.0.0.1 # Dirección de esta instancia única dentro del contenedor.
+    kvstore:
+      store: inmemory # Conserva en memoria el estado de coordinación de la instancia.
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks # Guarda en disco los bloques que contienen los logs.
+      rules_directory: /loki/rules # Guarda las reglas locales de alertas o procesamiento.
+
+schema_config:
+  configs:
+    - from: 2024-01-01 # Fecha desde la cual se aplica esta configuración de almacenamiento.
+      store: tsdb # Utiliza TSDB para organizar e indexar los logs.
+      object_store: filesystem # Guarda los datos localmente, sin utilizar almacenamiento cloud.
+      schema: v13 # Versión del esquema de almacenamiento utilizada por Loki.
+      index:
+        prefix: index_ # Prefijo utilizado para identificar los archivos del índice.
+        period: 24h # Organiza el índice en periodos diarios.
+
+limits_config:
+  allow_structured_metadata: true # Permite adjuntar metadata estructurada a los logs.
+  volume_enabled: true # Habilita consultas sobre el volumen de logs almacenado.
+
+analytics:
+  reporting_enabled: false # Evita enviar estadísticas de uso desde el entorno local.

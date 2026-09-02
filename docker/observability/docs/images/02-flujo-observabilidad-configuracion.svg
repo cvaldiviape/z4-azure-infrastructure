@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">Configuración y comunicación de la observabilidad local</title>
+  <desc id="description">Spring Boot genera logs, Alloy los procesa, Loki los almacena y Grafana los consulta.</desc>
+  <defs>
+    <marker id="green-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6 0 12Z" fill="#15803d"/></marker>
+    <marker id="orange-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6 0 12Z" fill="#c2410c"/></marker>
+    <marker id="blue-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6 0 12Z" fill="#1d4ed8"/></marker>
+    <marker id="dark-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6 0 12Z" fill="#111827"/></marker>
+    <style>
+      text{font-family:Arial,sans-serif;fill:#111827}.title{font-size:34px;font-weight:700}.subtitle{font-size:19px;fill:#475569}.heading{font-size:27px;font-weight:700}.body{font-size:19px}.strong{font-size:20px;font-weight:700}.code{font:17px monospace}.label{font-size:17px;font-weight:700}.small{font-size:15px}.box{stroke-width:5}.config{fill:#f8fafc;stroke:#64748b}.spring{fill:#dcfce7;stroke:#15803d}.alloy{fill:#ffedd5;stroke:#c2410c}.loki{fill:#dbeafe;stroke:#1d4ed8}.grafana{fill:#fef3c7;stroke:#d97706}.volume{fill:#f3e8ff;stroke:#7e22ce}.arrow{fill:none;stroke-width:10;stroke-linecap:round}.thin{fill:none;stroke:#64748b;stroke-width:4;stroke-dasharray:10 8}.tag{fill:#fff;stroke:#334155;stroke-width:2}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <text x="800" y="52" text-anchor="middle" class="title">OBSERVABILIDAD LOCAL: ARCHIVOS, CONEXIONES Y VOLÚMENES</text>
+  <text x="800" y="85" text-anchor="middle" class="subtitle">Docker Compose monta las configuraciones y conecta los servicios en su red interna</text>
+
+  <rect x="35" y="125" width="310" height="410" rx="18" class="box spring"/>
+  <text x="190" y="170" text-anchor="middle" class="heading">MAC / INTELLIJ</text>
+  <text x="65" y="218" class="strong">Spring Boot</text>
+  <text x="65" y="252" class="body">auth-service</text><text x="65" y="282" class="body">order-service</text>
+  <text x="65" y="312" class="body">inventory-service</text><text x="65" y="342" class="body">payment-service</text>
+  <line x1="65" y1="365" x2="315" y2="365" stroke="#86a98e" stroke-width="2"/>
+  <text x="65" y="402" class="strong">application-local.yml</text>
+  <text x="65" y="438" class="code">logging.file.name:</text><text x="65" y="468" class="code">logs/{service}.log</text>
+  <text x="65" y="510" class="strong">Escribe archivos .log</text>
+
+  <rect x="440" y="125" width="320" height="410" rx="18" class="box alloy"/>
+  <text x="600" y="170" text-anchor="middle" class="heading">ALLOY</text>
+  <text x="470" y="214" class="strong">config.alloy</text>
+  <text x="470" y="250" class="body">1. local.file_match</text><text x="470" y="282" class="body">2. loki.source.file</text>
+  <text x="470" y="314" class="body">3. loki.process</text><text x="470" y="346" class="body">4. loki.write</text>
+  <line x1="470" y1="370" x2="730" y2="370" stroke="#d69b77" stroke-width="2"/>
+  <text x="470" y="408" class="strong">Lee y agrupa stack traces</text>
+  <text x="470" y="442" class="strong">Agrega etiquetas</text>
+  <text x="470" y="477" class="code">service_name</text><text x="470" y="507" class="code">environment</text>
+
+  <rect x="855" y="125" width="320" height="410" rx="18" class="box loki"/>
+  <text x="1015" y="170" text-anchor="middle" class="heading">LOKI :3100</text>
+  <text x="885" y="214" class="strong">loki-config.yml</text>
+  <text x="885" y="250" class="code">http_listen_port: 3100</text><text x="885" y="282" class="code">store: tsdb</text>
+  <text x="885" y="314" class="code">object_store: filesystem</text><text x="885" y="346" class="code">schema: v13</text>
+  <line x1="885" y1="370" x2="1145" y2="370" stroke="#83a9e5" stroke-width="2"/>
+  <text x="885" y="408" class="strong">Recibe e indexa logs</text><text x="885" y="442" class="strong">Ejecuta LogQL</text>
+  <text x="885" y="476" class="strong">Devuelve resultados HTTP</text>
+
+  <rect x="1270" y="125" width="295" height="410" rx="18" class="box grafana"/>
+  <text x="1417" y="170" text-anchor="middle" class="heading">GRAFANA :3000</text>
+  <text x="1297" y="214" class="strong">datasources/loki.yml</text>
+  <text x="1297" y="250" class="code">type: loki</text><text x="1297" y="282" class="code">access: proxy</text>
+  <text x="1297" y="314" class="code">url:</text><text x="1297" y="344" class="code">http://loki:3100</text>
+  <line x1="1297" y1="370" x2="1535" y2="370" stroke="#dfbb66" stroke-width="2"/>
+  <text x="1297" y="408" class="strong">Explore</text><text x="1297" y="442" class="body">Envía consultas LogQL</text>
+  <text x="1297" y="476" class="body">Muestra resultados</text>
+
+  <path d="M345 330H425" class="arrow" stroke="#15803d" marker-end="url(#green-arrow)"/>
+  <rect x="330" y="264" width="126" height="50" rx="8" class="tag"/><text x="393" y="285" text-anchor="middle" class="label">Bind mount :ro</text><text x="393" y="305" text-anchor="middle" class="small">/var/log/z4</text>
+  <path d="M760 330H840" class="arrow" stroke="#c2410c" marker-end="url(#orange-arrow)"/>
+  <rect x="747" y="264" width="128" height="50" rx="8" class="tag"/><text x="811" y="285" text-anchor="middle" class="label">HTTP POST</text><text x="811" y="305" text-anchor="middle" class="small">/loki/api/v1/push</text>
+  <path d="M1270 305H1190" class="arrow" stroke="#1d4ed8" marker-end="url(#blue-arrow)"/>
+  <rect x="1167" y="238" width="130" height="50" rx="8" class="tag"/><text x="1232" y="259" text-anchor="middle" class="label">Consulta LogQL</text><text x="1232" y="279" text-anchor="middle" class="small">http://loki:3100</text>
+  <path d="M1175 465H1255" class="arrow" stroke="#111827" marker-end="url(#dark-arrow)"/>
+  <rect x="1168" y="478" width="135" height="32" rx="8" class="tag"/><text x="1235" y="500" text-anchor="middle" class="label">Resultados HTTP</text>
+
+  <rect x="440" y="625" width="320" height="155" rx="18" class="box volume"/><text x="600" y="670" text-anchor="middle" class="heading">alloy_data</text><text x="600" y="708" text-anchor="middle" class="code">/var/lib/alloy/data</text><text x="600" y="744" text-anchor="middle" class="body">Posiciones de lectura</text><text x="600" y="770" text-anchor="middle" class="small">No guarda logs finales</text>
+  <rect x="855" y="625" width="320" height="155" rx="18" class="box volume"/><text x="1015" y="670" text-anchor="middle" class="heading">loki_data</text><text x="1015" y="708" text-anchor="middle" class="code">/loki</text><text x="1015" y="744" text-anchor="middle" class="body">Logs, chunks e índices</text><text x="1015" y="770" text-anchor="middle" class="small">Persistencia de los logs</text>
+  <rect x="1270" y="625" width="295" height="155" rx="18" class="box volume"/><text x="1417" y="670" text-anchor="middle" class="heading">grafana_data</text><text x="1417" y="708" text-anchor="middle" class="code">/var/lib/grafana</text><text x="1417" y="744" text-anchor="middle" class="body">Dashboards y usuarios</text><text x="1417" y="770" text-anchor="middle" class="small">No contiene logs</text>
+  <path d="M600 535V610" class="arrow" stroke="#7e22ce" marker-end="url(#dark-arrow)"/><path d="M1015 535V610" class="arrow" stroke="#7e22ce" marker-end="url(#dark-arrow)"/><path d="M1417 535V610" class="arrow" stroke="#7e22ce" marker-end="url(#dark-arrow)"/>
+
+  <rect x="35" y="825" width="1530" height="52" rx="12" fill="#f1f5f9" stroke="#334155" stroke-width="2"/>
+  <text x="800" y="859" text-anchor="middle" class="strong">Spring Boot genera → Alloy recolecta y envía → Loki almacena y consulta → Grafana muestra</text>
+</svg>

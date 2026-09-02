@@ -1,0 +1,40 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Auth database",
+      "Group": "Z4 Event Commerce Local",
+      "Host": "auth-postgres",
+      "Port": 5432,
+      "MaintenanceDB": "auth_db",
+      "Username": "ecommerce",
+      "SSLMode": "prefer"
+    },
+    "2": {
+      "Name": "Orders database",
+      "Group": "Z4 Event Commerce Local",
+      "Host": "orders-postgres",
+      "Port": 5432,
+      "MaintenanceDB": "orders_db",
+      "Username": "ecommerce",
+      "SSLMode": "prefer"
+    },
+    "3": {
+      "Name": "Inventory database",
+      "Group": "Z4 Event Commerce Local",
+      "Host": "inventory-postgres",
+      "Port": 5432,
+      "MaintenanceDB": "inventory_db",
+      "Username": "ecommerce",
+      "SSLMode": "prefer"
+    },
+    "4": {
+      "Name": "Payments database",
+      "Group": "Z4 Event Commerce Local",
+      "Host": "payments-postgres",
+      "Port": 5432,
+      "MaintenanceDB": "payments_db",
+      "Username": "ecommerce",
+      "SSLMode": "prefer"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+flowchart LR
+    subgraph MAC["MAC / INTELLIJ"]
+        APP["Spring Boot<br/>auth · order · inventory · payment"]
+        APP_YML["application-local.yml<br/>logging.file.name:<br/>logs/{service-name}.log"]
+        LOGS["backend/*-service/logs/*.log"]
+        APP_YML -->|"configura escritura"| APP
+        APP -->|"genera logs"| LOGS
+    end
+
+    subgraph INFRA["CONFIGURACIÓN DEL PROYECTO"]
+        COMPOSE["infra/docker-compose.yml"]
+        ALLOY_FILE["observability/alloy/config.alloy<br/>local.file_match<br/>loki.source.file<br/>loki.process<br/>loki.write"]
+        LOKI_FILE["observability/loki/loki-config.yml<br/>puerto 3100 · filesystem · TSDB · schema v13"]
+        GRAFANA_FILE["observability/grafana/provisioning/<br/>datasources/loki.yml<br/>url: http://loki:3100"]
+    end
+
+    subgraph DOCKER["RED INTERNA DE DOCKER COMPOSE"]
+        ALLOY["Alloy<br/>lee · agrupa · etiqueta · envía"]
+        LOKI["Loki :3100<br/>recibe · indexa · almacena · consulta"]
+        GRAFANA["Grafana :3000<br/>consulta LogQL · muestra resultados"]
+    end
+
+    subgraph VOLUMES["VOLÚMENES ADMINISTRADOS POR DOCKER"]
+        ALLOY_DATA[("alloy_data<br/>posiciones de lectura")]
+        LOKI_DATA[("loki_data<br/>logs e índices")]
+        GRAFANA_DATA[("grafana_data<br/>dashboards y usuarios")]
+    end
+
+    LOGS -->|"Bind mount :ro<br/>/var/log/z4/{service-name}"| ALLOY
+    ALLOY_FILE -.->|"montaje :ro"| ALLOY
+    LOKI_FILE -.->|"montaje :ro"| LOKI
+    GRAFANA_FILE -.->|"montaje :ro"| GRAFANA
+    COMPOSE -.-> ALLOY
+    COMPOSE -.-> LOKI
+    COMPOSE -.-> GRAFANA
+    ALLOY -->|"HTTP POST<br/>http://loki:3100/loki/api/v1/push"| LOKI
+    GRAFANA -->|"Consulta LogQL por HTTP<br/>http://loki:3100"| LOKI
+    LOKI -->|"Resultados HTTP"| GRAFANA
+    ALLOY --> ALLOY_DATA
+    LOKI --> LOKI_DATA
+    GRAFANA --> GRAFANA_DATA

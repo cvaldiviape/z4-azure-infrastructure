@@ -1,0 +1,317 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Seguimiento cronológico de una compra distribuida mediante su correlationId.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Primer registro creado por Order Service al iniciar la Saga.",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "direction": "forward",
+          "editorMode": "code",
+          "expr": "{environment=\"local\", service_name=\"order-service\"} |~ \"correlationId=$correlationId(?:\\\\s|$)\" |= \"action=saga_started\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "1. Inicio de la Saga",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Última transición cuando la Saga alcanza COMPLETED.",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "direction": "forward",
+          "editorMode": "code",
+          "expr": "{environment=\"local\", service_name=\"order-service\"} |~ \"correlationId=$correlationId(?:\\\\s|$)\" |= \"action=saga_state_changed\" |= \"sagaStatus=COMPLETED\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "3. Fin de la Saga",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Tabla estructurada y ordenada desde el inicio hasta el final usando la hora original de Spring Boot.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "direction": "forward",
+          "editorMode": "code",
+          "expr": "{environment=\"local\", service_name=~\"$service\"} |~ \"correlationId=$correlationId(?:\\\\s|$)\" |~ \"action=(saga_started|saga_state_changed|event_received|event_published|event_processed|event_ignored|payment_approved|payment_rejected|event_processing_failed|event_publish_failed)\" | regexp \"(?P<business_log>action=.*)\" | line_format \"service={{.service_name}} {{.business_log}}\" | drop service_name, filename, detected_level, business_log",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "2. Flujo cronológico estructurado: inicio → fin",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "kvp",
+            "keepTime": true,
+            "replace": true,
+            "source": "Line"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "correlationId": true,
+              "offset": true,
+              "partition": true,
+              "paymentId": true,
+              "producer": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "service": 1,
+              "action": 2,
+              "eventType": 3,
+              "eventId": 4,
+              "topic": 5,
+              "orderId": 6,
+              "orderStatus": 7,
+              "sagaStatus": 8,
+              "reason": 9,
+              "exceptionType": 10,
+              "errorMessage": 11
+            },
+            "renameByName": {
+              "Time": "Time",
+              "action": "Action",
+              "errorMessage": "Error Message",
+              "eventId": "Event ID",
+              "eventType": "Event Type",
+              "exceptionType": "Exception Type",
+              "orderId": "Order ID",
+              "orderStatus": "Order Status",
+              "reason": "Reason",
+              "sagaStatus": "Saga Status",
+              "service": "Service",
+              "topic": "Topic"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Mensajes originales para revisar identificadores, topics, offsets y stack traces.",
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 4,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Ascending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "direction": "forward",
+          "editorMode": "code",
+          "expr": "{environment=\"local\", service_name=~\"$service\"} |~ \"correlationId=$correlationId(?:\\\\s|$)\" |~ \"action=(saga_started|saga_state_changed|event_received|event_published|event_processed|event_ignored|payment_approved|payment_rejected|event_processing_failed|event_publish_failed)\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "4. Logs técnicos originales",
+      "type": "logs"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": [
+    "kafka",
+    "saga",
+    "correlation-id"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": ".*",
+          "value": ".*"
+        },
+        "description": "Pega el correlationId completo de la respuesta del pedido. Usa .* para mostrar todos.",
+        "hide": 0,
+        "label": "Correlation ID",
+        "name": "correlationId",
+        "options": [
+          {
+            "selected": true,
+            "text": ".*",
+            "value": ".*"
+          }
+        ],
+        "query": ".*",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "Todos",
+          "value": ".*"
+        },
+        "description": "Limita la línea temporal a un backend.",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Servicio",
+        "multi": false,
+        "name": "service",
+        "options": [
+          {
+            "selected": true,
+            "text": "Todos",
+            "value": ".*"
+          },
+          {
+            "selected": false,
+            "text": "Order Service",
+            "value": "order-service"
+          },
+          {
+            "selected": false,
+            "text": "Inventory Service",
+            "value": "inventory-service"
+          },
+          {
+            "selected": false,
+            "text": "Payment Service",
+            "value": "payment-service"
+          }
+        ],
+        "query": "Todos : .*,Order Service : order-service,Inventory Service : inventory-service,Payment Service : payment-service",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Flujo de compra por Correlation ID",
+  "uid": "z4-purchase-saga-flow",
+  "version": 1,
+  "weekStart": ""
+}

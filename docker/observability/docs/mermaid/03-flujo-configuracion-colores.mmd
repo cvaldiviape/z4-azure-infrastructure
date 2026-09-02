@@ -1,0 +1,62 @@
+flowchart LR
+    subgraph MAC["💻 MAC / INTELLIJ"]
+        APP["🍃 Spring Boot<br/><b>auth · order · inventory · payment</b>"]
+        APP_CONFIG["📄 application-local.yml<br/><br/>logging.file.name:<br/>logs/{service-name}.log"]
+        LOGS["📁 backend/*-service/logs<br/><br/>auth-service.log<br/>order-service.log<br/>inventory-service.log<br/>payment-service.log"]
+        APP_CONFIG -->|"Configura dónde escribir"| APP
+        APP -->|"Genera"| LOGS
+    end
+
+    subgraph DOCKER["🐳 DOCKER COMPOSE"]
+        ALLOY["🟠 ALLOY<br/><br/>Lee archivos<br/>Agrupa stack traces<br/>Agrega service_name y environment"]
+        LOKI["🔵 LOKI :3100<br/><br/>Recibe logs<br/>Indexa etiquetas<br/>Almacena datos<br/>Procesa LogQL"]
+        GRAFANA["🟡 GRAFANA :3000<br/><br/>Explore<br/>Consultas LogQL<br/>Visualización"]
+    end
+
+    subgraph CONFIG["⚙️ ARCHIVOS DEL PROYECTO"]
+        COMPOSE["📄 infra/docker-compose.yml"]
+        ALLOY_CONFIG["📄 observability/alloy/config.alloy"]
+        LOKI_CONFIG["📄 observability/loki/loki-config.yml"]
+        GRAFANA_CONFIG["📄 provisioning/datasources/loki.yml<br/><b>url: http://loki:3100</b>"]
+    end
+
+    subgraph VOLUMES["🟣 VOLÚMENES DOCKER"]
+        ALLOY_DATA[("🟣 alloy_data<br/>posiciones de lectura<br/>no contiene logs finales")]
+        LOKI_DATA[("🟣 loki_data<br/>logs, chunks e índices")]
+        GRAFANA_DATA[("🟣 grafana_data<br/>dashboards y usuarios")]
+    end
+
+    LOGS ==>|"Bind mount :ro<br/>mismo archivo, no una copia"| ALLOY
+    ALLOY_CONFIG -.->|"montaje :ro"| ALLOY
+    LOKI_CONFIG -.->|"montaje :ro"| LOKI
+    GRAFANA_CONFIG -.->|"montaje :ro"| GRAFANA
+    COMPOSE -.-> ALLOY
+    COMPOSE -.-> LOKI
+    COMPOSE -.-> GRAFANA
+    ALLOY ==>|"HTTP POST<br/>http://loki:3100/loki/api/v1/push"| LOKI
+    GRAFANA ==>|"Consulta LogQL por HTTP<br/>http://loki:3100"| LOKI
+    LOKI ==>|"Resultados HTTP"| GRAFANA
+    ALLOY --> ALLOY_DATA
+    LOKI --> LOKI_DATA
+    GRAFANA --> GRAFANA_DATA
+
+    classDef spring fill:#dcfce7,stroke:#16a34a,color:#14532d,stroke-width:3px;
+    classDef alloy fill:#ffedd5,stroke:#f97316,color:#7c2d12,stroke-width:4px;
+    classDef loki fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,stroke-width:4px;
+    classDef grafana fill:#fef3c7,stroke:#f59e0b,color:#78350f,stroke-width:4px;
+    classDef volume fill:#f3e8ff,stroke:#9333ea,color:#581c87,stroke-width:3px;
+    classDef config fill:#f1f5f9,stroke:#64748b,color:#1e293b,stroke-width:2px;
+    classDef logs fill:#ecfccb,stroke:#65a30d,color:#365314,stroke-width:3px;
+
+    class APP spring;
+    class ALLOY alloy;
+    class LOKI loki;
+    class GRAFANA grafana;
+    class ALLOY_DATA,LOKI_DATA,GRAFANA_DATA volume;
+    class APP_CONFIG,COMPOSE,ALLOY_CONFIG,LOKI_CONFIG,GRAFANA_CONFIG config;
+    class LOGS logs;
+
+    style MAC fill:#f0fdf4,stroke:#22c55e,stroke-width:2px
+    style DOCKER fill:#eff6ff,stroke:#3b82f6,stroke-width:3px
+    style CONFIG fill:#f8fafc,stroke:#64748b,stroke-width:2px
+    style VOLUMES fill:#faf5ff,stroke:#9333ea,stroke-width:2px

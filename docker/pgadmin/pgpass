@@ -1,0 +1,4 @@
+auth-postgres:5432:auth_db:ecommerce:ecommerce
+orders-postgres:5432:orders_db:ecommerce:ecommerce
+inventory-postgres:5432:inventory_db:ecommerce:ecommerce
+payments-postgres:5432:payments_db:ecommerce:ecommerce
