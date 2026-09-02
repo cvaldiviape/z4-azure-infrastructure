@@ -119,7 +119,7 @@ No se recomienda modificar directamente su `Mountpoint`. Los datos deben manipul
 La primera vez que se ejecuta:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d auth-postgres
+docker compose -f infra/docker/docker-compose.yml up -d auth-postgres
 ```
 
 Docker Compose realiza conceptualmente estos pasos:
@@ -188,7 +188,7 @@ Por eso los datos sobreviven a reinicios y recreaciones del contenedor.
 Este comando elimina contenedores y la red, pero conserva los volúmenes:
 
 ```bash
-docker compose -f infra/docker-compose.yml down
+docker compose -f infra/docker/docker-compose.yml down
 ```
 
 Al ejecutar nuevamente `up`, PostgreSQL utiliza los datos existentes.
@@ -196,7 +196,7 @@ Al ejecutar nuevamente `up`, PostgreSQL utiliza los datos existentes.
 Este comando también elimina los volúmenes declarados por el proyecto:
 
 ```bash
-docker compose -f infra/docker-compose.yml down -v
+docker compose -f infra/docker/docker-compose.yml down -v
 ```
 
 En este proyecto puede eliminar las bases PostgreSQL, los datos de Kafka, Loki, Grafana, pgAdmin y el estado de Alloy. Debe utilizarse únicamente cuando se desea reiniciar toda la infraestructura desde cero.
@@ -222,13 +222,13 @@ Docker decide dónde guardar los datos. Es apropiado para bases de datos y estad
 ### Bind mount
 
 ```yaml
-- ../backend/order-service/logs:/var/log/z4/order-service:ro
+- ../../backend/order-service/logs:/var/log/z4/order-service:ro
 ```
 
 El origen es una ruta del Mac:
 
 ```text
-../backend/order-service/logs
+../../backend/order-service/logs
 ```
 
 Docker comparte esa carpeta existente con el contenedor:
@@ -301,19 +301,19 @@ docker inspect infra-auth-postgres-1
 Consultar los volúmenes utilizados por este Compose:
 
 ```bash
-docker compose -f infra/docker-compose.yml config --volumes
+docker compose -f infra/docker/docker-compose.yml config --volumes
 ```
 
 Detener la infraestructura conservando sus datos:
 
 ```bash
-docker compose -f infra/docker-compose.yml down
+docker compose -f infra/docker/docker-compose.yml down
 ```
 
 Eliminar también todos los datos persistentes del proyecto:
 
 ```bash
-docker compose -f infra/docker-compose.yml down -v
+docker compose -f infra/docker/docker-compose.yml down -v
 ```
 
 ## Resumen mental

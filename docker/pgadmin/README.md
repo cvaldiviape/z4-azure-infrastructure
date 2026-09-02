@@ -192,7 +192,7 @@ Los valores de host, puerto, base, usuario y contraseña deben coincidir entre l
 Desde la raíz del proyecto, inicia pgAdmin y las bases requeridas:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d pgadmin
+docker compose -f infra/docker/docker-compose.yml up -d pgadmin
 ```
 
 Abre [http://localhost:5050](http://localhost:5050) e inicia sesión:

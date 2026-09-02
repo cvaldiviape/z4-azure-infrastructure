@@ -25,7 +25,7 @@ Grafana no lee directamente los archivos y Alloy no proporciona una pantalla par
 | Archivo                                                       | Quién lo utiliza | Responsabilidad                                               |
 |--------------------------------------------------------------|-------------------|---------------------------------------------------------------|
 | `backend/*-service/src/main/resources/application-local.yml` | Spring Boot       | Crea el archivo de log de cada backend.                       |
-| `infra/docker-compose.yml`                                   | Docker Compose    | Crea los contenedores, puertos, volúmenes y montajes.         |
+| `infra/docker/docker-compose.yml`                                   | Docker Compose    | Crea los contenedores, puertos, volúmenes y montajes.         |
 | `alloy/config.alloy`                                         | Alloy             | Localiza, etiqueta y procesa los archivos antes de enviarlos. |
 | `loki/loki-config.yml`                                       | Loki              | Configura la recepción, indexación y almacenamiento local.    |
 | `grafana/provisioning/datasources/loki.yml`                  | Grafana           | Registra automáticamente a Loki como fuente de datos.         |
@@ -56,14 +56,14 @@ Los siguientes montajes de `docker-compose.yml` conectan las carpetas del Mac co
 
 ```yaml
 volumes:
-  - ../backend/order-service/logs:/var/log/z4/order-service:ro
+  - ../../backend/order-service/logs:/var/log/z4/order-service:ro
 ```
 
 La estructura significa:
 
 | Parte | Significado |
 |---|---|
-| `../backend/order-service/logs` | Carpeta real del backend en el Mac. |
+| `../../backend/order-service/logs` | Carpeta real del backend en el Mac. |
 | `/var/log/z4/order-service` | Ruta con la que Alloy ve esa carpeta dentro de su contenedor. |
 | `ro` | Montaje de solo lectura; Alloy puede leer los logs, pero no modificarlos. |
 

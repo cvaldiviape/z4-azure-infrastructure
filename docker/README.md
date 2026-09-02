@@ -24,20 +24,20 @@ El mapeo `5434:5432` significa que una aplicación ejecutada en el Mac se conect
 Desde la raíz del proyecto:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d
-docker compose -f infra/docker-compose.yml ps
+docker compose -f infra/docker/docker-compose.yml up -d
+docker compose -f infra/docker/docker-compose.yml ps
 ```
 
 Para iniciar únicamente Kafka y la base de pedidos:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d kafka orders-postgres
+docker compose -f infra/docker/docker-compose.yml up -d kafka orders-postgres
 ```
 
 Para iniciar Kafka junto con su interfaz gráfica:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d kafka-ui
+docker compose -f infra/docker/docker-compose.yml up -d kafka-ui
 ```
 
 `depends_on` inicia Kafka automáticamente y espera a que su health check sea satisfactorio.
@@ -82,7 +82,7 @@ Spring Boot → archivo .log → Alloy → Loki → Grafana
 Para iniciar solamente esta plataforma:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d grafana alloy
+docker compose -f infra/docker/docker-compose.yml up -d grafana alloy
 ```
 
 `depends_on` también inicia Loki. Después reinicia los backends desde IntelliJ para que creen sus archivos de logs.
@@ -129,7 +129,7 @@ La explicación propiedad por propiedad y el recorrido completo entre los compon
 Para iniciar pgAdmin junto con las cuatro bases de datos:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d pgadmin
+docker compose -f infra/docker/docker-compose.yml up -d pgadmin
 ```
 
 `depends_on` inicia automáticamente las bases requeridas por pgAdmin y espera a que sus health checks sean satisfactorios.
@@ -152,7 +152,7 @@ pgAdmin utiliza los hosts internos `auth-postgres`, `orders-postgres`, `inventor
 Para detener la infraestructura conservando los datos:
 
 ```bash
-docker compose -f infra/docker-compose.yml down
+docker compose -f infra/docker/docker-compose.yml down
 ```
 
 Los health checks permiten confirmar cuándo Kafka y las bases están disponibles. Los volúmenes conservan los datos entre reinicios.

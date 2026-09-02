@@ -6,12 +6,11 @@ Proyecto educativo con cuatro microservicios Spring Boot 4, Java 21, PostgreSQL 
 
 | Componente | Documentación |
 |---|---|
-| Infraestructura local | [infra/README.md](infra/README.md) |
-| Estrategia de bases de datos | [docs/database/README.md](docs/database/README.md) |
-| Autenticación | [backend/auth-service/README.md](backend/auth-service/README.md) |
-| Pedidos y Saga de compra | [backend/order-service/README.md](backend/order-service/README.md) |
-| Inventario | [backend/inventory-service/README.md](backend/inventory-service/README.md) |
-| Pagos | [backend/payment-service/README.md](backend/payment-service/README.md) |
+| Infraestructura local | [docker/README.md](docker/README.md) |
+| Autenticación | [backend/auth-service/README.md](../backend/auth-service/README.md) |
+| Pedidos y Saga de compra | [backend/order-service/README.md](../backend/order-service/README.md) |
+| Inventario | [backend/inventory-service/README.md](../backend/inventory-service/README.md) |
+| Pagos | [backend/payment-service/README.md](../backend/payment-service/README.md) |
 
 El README raíz explica el sistema completo. Cada README específico documenta las decisiones y variables propias de su componente. Cuando cambie un puerto, topic, consumer group, variable o responsabilidad, se debe actualizar el README del componente afectado en el mismo commit.
 
@@ -53,8 +52,8 @@ mvn -version
 Inicia Docker Desktop. Después, desde la raíz del proyecto, ejecuta:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d
-docker compose -f infra/docker-compose.yml ps
+docker compose -f infra/docker/docker-compose.yml up -d
+docker compose -f infra/docker/docker-compose.yml ps
 ```
 
 La infraestructura queda disponible en:
@@ -68,7 +67,7 @@ La infraestructura queda disponible en:
 | Payments PostgreSQL | `localhost:5436/payments_db` |
 | pgAdmin | [http://localhost:5050](http://localhost:5050) |
 
-Los datos se conservan en volúmenes de Docker al ejecutar `docker compose -f infra/docker-compose.yml down`.
+Los datos se conservan en volúmenes de Docker al ejecutar `docker compose -f infra/docker/docker-compose.yml down`.
 
 ## Ejecutar y depurar desde IntelliJ
 
@@ -147,7 +146,7 @@ Utiliza un valor diferente de `TEST_APPROVED` para observar la compensación por
 ## Detener la infraestructura
 
 ```bash
-docker compose -f infra/docker-compose.yml down
+docker compose -f infra/docker/docker-compose.yml down
 ```
 
 No agregues `-v` al comando anterior si deseas conservar los datos.

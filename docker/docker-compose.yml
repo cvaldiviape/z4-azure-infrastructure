@@ -59,10 +59,10 @@ services:
     volumes:
       - alloy_data:/var/lib/alloy/data # # Persiste el estado interno y las posiciones de lectura para que Alloy continúe desde el último punto procesado después de reiniciarse.
       - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
-      - ../backend/auth-service/logs:/var/log/z4/auth-service:ro
-      - ../backend/order-service/logs:/var/log/z4/order-service:ro
-      - ../backend/inventory-service/logs:/var/log/z4/inventory-service:ro
-      - ../backend/payment-service/logs:/var/log/z4/payment-service:ro
+      - ../../backend/auth-service/logs:/var/log/z4/auth-service:ro
+      - ../../backend/order-service/logs:/var/log/z4/order-service:ro
+      - ../../backend/inventory-service/logs:/var/log/z4/inventory-service:ro
+      - ../../backend/payment-service/logs:/var/log/z4/payment-service:ro
 
   grafana:
     image: grafana/grafana:13.2.0
