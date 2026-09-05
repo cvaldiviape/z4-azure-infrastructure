@@ -23,6 +23,7 @@ Toda la documentación de infraestructura está centralizada en [`docs`](docs):
 | Kafka | [Fundamentos](docs/kafka-fundamentals.md) | Brokers, topics, particiones, offsets y consumer groups. |
 | Kafka | [Kafbat UI](docs/kafbat-ui-guide.md) | Inspección de mensajes, consumidores, offsets y lag. |
 | Kafka | [Reintentos y DLT](docs/kafka-retries-dlt.md) | Clasificación de errores, reintentos y mensajes fallidos. |
+| Arquitectura | [Transactional Inbox y Outbox](docs/transactional-inbox-outbox.md) | Consistencia, idempotencia y publicación confiable de eventos. |
 | PostgreSQL | [Estrategia de bases de datos](docs/database-strategy.md) | Database per service, Flyway y aislamiento de datos. |
 | PostgreSQL | [pgAdmin](docs/pgadmin.md) | Conexiones locales y archivos de configuración. |
 | Observabilidad | [Logs con Alloy, Loki y Grafana](docs/observability.md) | Arquitectura y configuración de la plataforma de logs. |
