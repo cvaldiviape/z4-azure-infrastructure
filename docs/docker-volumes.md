@@ -1,4 +1,4 @@
-# Volúmenes de Docker
+# Docker: volúmenes y persistencia
 
 Un contenedor tiene su propio filesystem, pero ese almacenamiento pertenece al contenedor. Si el contenedor se elimina, también se elimina la información escrita únicamente dentro de él.
 

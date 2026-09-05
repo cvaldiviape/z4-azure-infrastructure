@@ -6,13 +6,29 @@ Proyecto educativo con cuatro microservicios Spring Boot 4, Java 21, PostgreSQL 
 
 | Componente | Documentación |
 |---|---|
-| Infraestructura local | [docker/README.md](docker/README.md) |
+| Infraestructura local | [docs/infrastructure-local.md](docs/infrastructure-local.md) |
 | Autenticación | [backend/auth-service/README.md](../backend/auth-service/README.md) |
 | Pedidos y Saga de compra | [backend/order-service/README.md](../backend/order-service/README.md) |
 | Inventario | [backend/inventory-service/README.md](../backend/inventory-service/README.md) |
 | Pagos | [backend/payment-service/README.md](../backend/payment-service/README.md) |
 
-El README raíz explica el sistema completo. Cada README específico documenta las decisiones y variables propias de su componente. Cuando cambie un puerto, topic, consumer group, variable o responsabilidad, se debe actualizar el README del componente afectado en el mismo commit.
+### Guías de infraestructura
+
+Toda la documentación de infraestructura está centralizada en [`docs`](docs):
+
+| Área | Guía | Contenido |
+|---|---|---|
+| Inicio | [Infraestructura local](docs/infrastructure-local.md) | Componentes, puertos, ejecución y credenciales locales. |
+| Docker | [Volúmenes y persistencia](docs/docker-volumes.md) | Volúmenes administrados, bind mounts y conservación de datos. |
+| Kafka | [Fundamentos](docs/kafka-fundamentals.md) | Brokers, topics, particiones, offsets y consumer groups. |
+| Kafka | [Kafbat UI](docs/kafbat-ui-guide.md) | Inspección de mensajes, consumidores, offsets y lag. |
+| Kafka | [Reintentos y DLT](docs/kafka-retries-dlt.md) | Clasificación de errores, reintentos y mensajes fallidos. |
+| PostgreSQL | [Estrategia de bases de datos](docs/database-strategy.md) | Database per service, Flyway y aislamiento de datos. |
+| PostgreSQL | [pgAdmin](docs/pgadmin.md) | Conexiones locales y archivos de configuración. |
+| Observabilidad | [Logs con Alloy, Loki y Grafana](docs/observability.md) | Arquitectura y configuración de la plataforma de logs. |
+| Observabilidad | [Consultas LogQL](docs/grafana-logql-queries.md) | Búsquedas y filtros prácticos para Grafana. |
+
+Este README funciona como portada e índice. Cada guía documenta una responsabilidad concreta. Cuando cambie un puerto, topic, consumer group, variable o decisión operativa, se debe actualizar la guía correspondiente en el mismo commit.
 
 ## Flujo
 

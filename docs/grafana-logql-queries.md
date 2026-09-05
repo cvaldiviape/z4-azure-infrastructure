@@ -1,4 +1,4 @@
-# Consultas de logs en Grafana con LogQL
+# Observabilidad: consultas LogQL para Grafana
 
 Esta guía reúne consultas prácticas para explorar en Grafana los logs que Alloy envía a Loki.
 

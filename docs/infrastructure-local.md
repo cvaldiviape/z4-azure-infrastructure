@@ -62,11 +62,11 @@ Kafka expone dos listeners porque el host cambia según el lugar desde donde se 
 
 `KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS` registra `kafka:29092` como la dirección inicial que Kafbat UI usa para descubrir el broker. Kafbat UI observa Kafka directamente; no se conecta a los controllers ni reemplaza a los consumers de los backends.
 
-Si recién estás comenzando con Kafka, lee primero [Kafka desde cero aplicado a Z4 Event Commerce](docs/kafka-fundamentals.md). Explica brokers, topics, particiones, réplicas, offsets, consumer groups, confirmaciones, reintentos y DLT usando el flujo real del proyecto.
+Si recién estás comenzando con Kafka, lee primero [Kafka desde cero aplicado a Z4 Event Commerce](kafka-fundamentals.md). Explica brokers, topics, particiones, réplicas, offsets, consumer groups, confirmaciones, reintentos y DLT usando el flujo real del proyecto.
 
-La búsqueda de mensajes, el seguimiento mediante `correlationId`, las particiones, los offsets, los consumer groups y el diagnóstico se explican paso a paso en [docs/kafbat-ui-guide.md](docs/kafbat-ui-guide.md).
+La búsqueda de mensajes, el seguimiento mediante `correlationId`, las particiones, los offsets, los consumer groups y el diagnóstico se explican paso a paso en [la guía de Kafbat UI](kafbat-ui-guide.md).
 
-Los reintentos limitados, los Dead Letter Topics y el procedimiento para revisar un mensaje que agotó sus intentos se explican en [docs/kafka-retries-dlt.md](docs/kafka-retries-dlt.md).
+Los reintentos limitados, los Dead Letter Topics y el procedimiento para revisar un mensaje que agotó sus intentos se explican en [reintentos y DLT](kafka-retries-dlt.md).
 
 ## Consultar logs con Grafana
 
@@ -126,7 +126,7 @@ Los archivos de configuración son:
 | `observability/loki/loki-config.yml` | Configura Loki en modo local de una sola instancia y almacenamiento en filesystem. |
 | `observability/grafana/provisioning/datasources/loki.yml` | Registra Loki automáticamente como datasource predeterminado de Grafana. |
 
-La explicación propiedad por propiedad y el recorrido completo entre los componentes se encuentra en [observability/README.md](observability/README.md).
+La explicación propiedad por propiedad y el recorrido completo entre los componentes se encuentra en [Observabilidad local](observability.md).
 
 Para iniciar pgAdmin junto con las cuatro bases de datos:
 
@@ -147,7 +147,7 @@ Contraseña: admin
 
 El grupo `Z4 Event Commerce Local` contiene las conexiones Auth, Orders, Inventory y Payments. Las definiciones se cargan desde `pgadmin/servers.json` y las contraseñas locales desde `pgadmin/pgpass`.
 
-La relación entre estos archivos, Docker y los backends está explicada detalladamente en [pgadmin/README.md](pgadmin/README.md).
+La relación entre estos archivos, Docker y los backends está explicada detalladamente en [Configuración local de pgAdmin](pgadmin.md).
 
 pgAdmin utiliza los hosts internos `auth-postgres`, `orders-postgres`, `inventory-postgres` y `payments-postgres` con el puerto `5432` porque se ejecuta dentro de la misma red de Docker Compose. Los backends ejecutados desde el Mac continúan utilizando `localhost` y los puertos `5433` a `5436`.
 
@@ -159,7 +159,7 @@ docker compose -f infra/docker/docker-compose.yml down
 
 Los health checks permiten confirmar cuándo Kafka y las bases están disponibles. Los volúmenes conservan los datos entre reinicios.
 
-La diferencia entre origen, destino, permisos, volúmenes administrados y bind mounts se explica paso a paso en [docs/docker-volumes.md](docs/docker-volumes.md).
+La diferencia entre origen, destino, permisos, volúmenes administrados y bind mounts se explica paso a paso en [Volúmenes de Docker](docker-volumes.md).
 
 ## Credenciales locales
 

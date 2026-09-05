@@ -1,4 +1,4 @@
-# Configuración local de pgAdmin
+# PostgreSQL: configuración local de pgAdmin
 
 pgAdmin es una interfaz web para consultar y administrar las mismas bases PostgreSQL utilizadas por los backends. No se conecta a los controladores ni a las aplicaciones Java; se conecta directamente a los contenedores PostgreSQL.
 

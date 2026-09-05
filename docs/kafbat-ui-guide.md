@@ -1,4 +1,4 @@
-# Guía práctica de Kafbat UI
+# Kafka: guía práctica de Kafbat UI
 
 Kafbat UI permite inspeccionar Kafka desde el navegador. En este proyecto sirve para comprobar qué eventos se publicaron, revisar sus datos y observar el avance de los grupos de consumidores.
 

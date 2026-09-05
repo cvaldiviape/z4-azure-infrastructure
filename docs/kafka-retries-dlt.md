@@ -1,4 +1,4 @@
-# Reintentos y Dead Letter Topics de Kafka
+# Kafka: reintentos y Dead Letter Topics
 
 Esta primera estrategia de recuperación evita que una excepción no controlada deje un consumer reintentando indefinidamente el mismo mensaje. Cada backend que consume Kafka utiliza `DefaultErrorHandler` y `DeadLetterPublishingRecoverer` de Spring Kafka.
 
@@ -20,6 +20,18 @@ Confirmación del offset original
 
 `max-attempts: 3` incluye el intento inicial; por tanto, se realizan dos reintentos. Si cualquiera de los tres intentos funciona, el mensaje no llega al DLT.
 
+La cantidad anterior se aplica a errores técnicos que podrían ser temporales, por ejemplo una caída de base de datos. Los errores permanentes no se reintentan porque procesar nuevamente el mismo mensaje produciría el mismo resultado:
+
+| Categoría | Ejemplo | Tratamiento |
+|---|---|---|
+| Negocio esperado | Stock insuficiente o pago rechazado | Publicar el evento de negocio correspondiente; no usar el manejador de errores. |
+| Técnico temporal | Timeout, conexión o base de datos no disponible | Aplicar los intentos configurados y, si no se recupera, enviar al DLT. |
+| Permanente | JSON inválido, argumento inválido o regla que no puede cambiar al reintentar | Enviar directamente al DLT. |
+
+La clasificación utiliza una lista positiva: por defecto ninguna excepción se reintenta. Solo `CustomRetryableKafkaException`, `TransientDataAccessException` y `RecoverableDataAccessException` reciben los intentos configurados. De esta manera, errores desconocidos como `NullPointerException`, errores de argumentos y bugs de programación van directamente al DLT.
+
+`CustomNonRetryableKafkaException` expresa explícitamente que el mensaje es inválido o incompatible. `CustomBusinessException` no debe utilizarse para representar resultados normales como stock insuficiente; esos casos deben producir un evento de negocio. Si cualquiera de estas excepciones alcanza el listener, la política predeterminada la envía directamente al DLT.
+
 El modo `ack-mode: record` confirma cada offset individualmente cuando el mensaje terminó correctamente o cuando ya fue recuperado mediante el DLT. Así, un mensaje fallido no bloquea permanentemente los mensajes posteriores de la partición.
 
 ## Configuración
@@ -32,6 +44,8 @@ Cada backend contiene `kafka/config/KafkaConsumerRetryConfig.java`. La clase:
 4. Resuelve el destino agregando el sufijo `-dlt` al topic de origen.
 5. Registra los logs `action=event_retry` y `action=event_sent_to_dlt`.
 6. Declara explícitamente los topics DLT mediante `NewTopics`.
+7. Cambia el valor predeterminado mediante `defaultFalse()` para no reintentar errores desconocidos.
+8. Registra con `addRetryableExceptions` únicamente los errores temporales o recuperables.
 
 Las propiedades están en el `application.yml` de cada backend:
 
@@ -86,4 +100,3 @@ Tampoco incluye todavía:
 - Reprocesamiento manual o automático.
 - Alertas cuando aumenta la cantidad de mensajes en DLT.
 - Detección por timeout de sagas detenidas.
-

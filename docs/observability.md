@@ -265,14 +265,14 @@ Esta etapa centraliza logs y los flujos Kafka registran `eventId`, `correlationI
 
 Los gráficos utilizados para estudiar esta configuración están guardados dentro del proyecto:
 
-1. [Flujo general de observabilidad](docs/images/01-flujo-observabilidad-general.png)
-2. [Diagrama técnico original](docs/images/02-flujo-configuracion-original.png)
-3. [Diagrama técnico con colores](docs/images/03-flujo-configuracion-colores.png)
+1. [Flujo general de observabilidad](../docker/observability/docs/images/01-flujo-observabilidad-general.png)
+2. [Diagrama técnico original](../docker/observability/docs/images/02-flujo-configuracion-original.png)
+3. [Diagrama técnico con colores](../docker/observability/docs/images/03-flujo-configuracion-colores.png)
 
-Las versiones vectoriales se encuentran en [02-flujo-configuracion-original.svg](docs/images/02-flujo-configuracion-original.svg) y [03-flujo-configuracion-colores.svg](docs/images/03-flujo-configuracion-colores.svg). Sus fuentes Mermaid editables se encuentran en la carpeta [docs/mermaid](docs/mermaid).
+Las versiones vectoriales se encuentran en [02-flujo-configuracion-original.svg](../docker/observability/docs/images/02-flujo-configuracion-original.svg) y [03-flujo-configuracion-colores.svg](../docker/observability/docs/images/03-flujo-configuracion-colores.svg). Sus fuentes Mermaid editables se encuentran en la carpeta [mermaid](../docker/observability/docs/mermaid).
 
-Como material adicional, la versión detallada de alto contraste está disponible en [03-flujo-observabilidad-detallado.png](docs/images/03-flujo-observabilidad-detallado.png) y su fuente en [docs/03-flujo-observabilidad-detallado.html](docs/03-flujo-observabilidad-detallado.html).
+Como material adicional, la versión detallada de alto contraste está disponible en [03-flujo-observabilidad-detallado.png](../docker/observability/docs/images/03-flujo-observabilidad-detallado.png).
 
 ## Guía de consultas en Grafana
 
-Las consultas para filtrar por backend, nivel, errores, Kafka, PostgreSQL e identificadores de la Saga se encuentran en [docs/grafana-logql-queries.md](docs/grafana-logql-queries.md).
+Las consultas para filtrar por backend, nivel, errores, Kafka, PostgreSQL e identificadores de la Saga se encuentran en [Consultas LogQL para Grafana](grafana-logql-queries.md).

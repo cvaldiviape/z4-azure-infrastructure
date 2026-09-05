@@ -1,4 +1,4 @@
-# Kafka desde cero aplicado a Z4 Event Commerce
+# Kafka: fundamentos aplicados a Z4 Event Commerce
 
 Esta guía explica las ideas mínimas necesarias para entender Kafka y leer el código del proyecto. Kafka no llama directamente a otro microservicio como lo haría una petición HTTP. Un servicio publica un mensaje, Kafka lo conserva y otro servicio lo consume cuando puede.
 

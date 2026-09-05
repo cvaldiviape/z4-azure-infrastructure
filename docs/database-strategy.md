@@ -1,4 +1,4 @@
-# Estrategia de bases de datos
+# PostgreSQL: estrategia de bases de datos
 
 Este documento explica las decisiones de persistencia de Z4 Event Commerce: propiedad de datos por microservicio, aislamiento local mediante contenedores PostgreSQL y criterios utilizados para elegir el motor de base de datos.
 
