@@ -127,11 +127,11 @@ La compensación no es un rollback distribuido. `RELEASE_STOCK` es una nueva ope
 
 Order conserva tres vistas relacionadas:
 
-| Información       | Finalidad                                                                                                                                    |
-|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| Pedido            | Estado de negocio visible: `CREATED`, `PAYMENT_PENDING`, `CONFIRMED` o `CANCELLED`.                                                          |
-| Saga              | Estado de coordinación: `STARTED`, `IN_PROGRESS`, `COMPENSATING`, `COMPLETED` o `FAILED`; además conserva el paso actual y el último evento. |
-| Historial de Saga | Registra cada transición para seguimiento y diagnóstico.                                                                                     |
+| Información       | Finalidad                                                                                                                                                 |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Pedido            | Estado de negocio visible: `CREATED`, `PAYMENT_PENDING`, `CONFIRMED` o `CANCELLED`.                                                                       |
+| Saga              | Estado de coordinación: `STARTED`, `IN_PROGRESS`, `COMPENSATING`, `TIMED_OUT`, `COMPLETED` o `FAILED`; además conserva el paso actual y el último evento. |
+| Historial de Saga | Registra cada transición para seguimiento y diagnóstico.                                                                                                  |
 
 `PurchaseSagaServiceImpl` recibe los eventos de Inventory y Payment. Selecciona el comportamiento mediante `StockEventStrategyRegistry` o `PaymentEventStrategyRegistry`, y `PurchaseSagaStateManager` actualiza el pedido, la Saga y su historial.
 
@@ -144,6 +144,30 @@ Las estrategias implementadas son:
 | `PaymentApprovedEventStrategy`   | Confirma el pedido y completa la Saga.                   |
 | `PaymentFailedEventStrategy`     | Marca la Saga como compensando y encola `RELEASE_STOCK`. |
 | `StockReleasedEventStrategy`     | Cancela el pedido y completa la compensación.            |
+
+## Timeout de Saga
+
+Order ejecuta periódicamente un detector de Sagas que permanecen demasiado tiempo en `STARTED`, `IN_PROGRESS` o `COMPENSATING`. La antigüedad se calcula utilizando `updated_at` y, para una Saga que todavía no tuvo transiciones, `created_at`.
+
+Cuando una Saga supera el tiempo configurado:
+
+1. la fila se bloquea con `FOR UPDATE SKIP LOCKED` para evitar que dos instancias procesen el mismo timeout;
+2. la Saga cambia a `TIMED_OUT` y su paso actual a `SAGA_TIMED_OUT`;
+3. se registra una entrada en `purchase_saga_histories` con el paso anterior y la causa;
+4. el pedido y sus datos recuperables conservan su estado actual, porque el timeout detecta el problema pero no decide automáticamente una cancelación o compensación.
+
+La columna de versión de `purchase_sagas` evita que el timeout sobrescriba silenciosamente una transición Kafka concurrente.
+
+| Propiedad | Variable | Valor predeterminado |
+|-----------------------------------------------|-------------------------------------------|--------------------|
+| `app.saga.timeout-milliseconds`               | `SAGA_TIMEOUT_MILLISECONDS`               | 300000 (5 minutos) |
+| `app.saga.timeout-batch-size`                 | `SAGA_TIMEOUT_BATCH_SIZE`                 | 100                |
+| `app.saga.timeout-poll-interval-milliseconds` | `SAGA_TIMEOUT_POLL_INTERVAL_MILLISECONDS` | 30000              |
+| `app.saga.timeout-initial-delay-milliseconds` | `SAGA_TIMEOUT_INITIAL_DELAY_MILLISECONDS` | 30000              |
+
+El log `action=saga_timed_out` permite localizar cada caso por `correlationId` y `orderId`. La reconciliación posterior debe decidir si corresponde reanudar, compensar o cerrar manualmente la compra. Un evento tardío o reproducido todavía puede llevar la Saga desde `TIMED_OUT` a `IN_PROGRESS`, `COMPENSATING` o `COMPLETED`; el Inbox evita repetir los efectos de un `eventId` que ya fue procesado.
+
+`FAILED` queda reservado para una recuperación agotada o un caso declarado irrecuperable, no para la simple ausencia temporal de una respuesta.
 
 ## Consistencia y tolerancia a fallos
 
@@ -187,9 +211,8 @@ La respuesta HTTP confirma que Order aceptó y creó el pedido, no que toda la S
 
 ## Límites actuales
 
-- No existe timeout automático para detectar una Saga detenida esperando una respuesta.
 - No hay intervención o reanudación manual de Sagas fallidas desde una API administrativa.
-- `FAILED` existe como estado, pero los errores de consumo se gestionan principalmente mediante reintentos y DLT.
+- El timeout detecta y registra Sagas estancadas, pero todavía no existe reconciliación automática.
 - El pago es una simulación local: únicamente `TEST_APPROVED` produce aprobación.
 - No se publica `ORDER_CONFIRMED` cuando finaliza el camino exitoso.
 
