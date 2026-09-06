@@ -1,4 +1,4 @@
-# Consultas de logs en Grafana con LogQL
+# Observabilidad: consultas LogQL para Grafana
 
 Esta guía reúne consultas prácticas para explorar en Grafana los logs que Alloy envía a Loki.
 
@@ -286,13 +286,13 @@ Esta etapa ofrece correlación de negocio mediante `correlationId`, pero todaví
 5. Verifica los contenedores:
 
    ```bash
-   docker compose -f infra/docker-compose.yml ps alloy loki grafana
+   docker compose -f infra/docker/docker-compose.yml ps alloy loki grafana
    ```
 
 6. Revisa Alloy:
 
    ```bash
-   docker compose -f infra/docker-compose.yml logs --tail=100 alloy
+   docker compose -f infra/docker/docker-compose.yml logs --tail=100 alloy
    ```
 
 7. Ejecuta nuevamente una petición en Postman y presiona **Run query**.

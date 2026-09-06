@@ -1,4 +1,4 @@
-# Configuración local de pgAdmin
+# PostgreSQL: configuración local de pgAdmin
 
 pgAdmin es una interfaz web para consultar y administrar las mismas bases PostgreSQL utilizadas por los backends. No se conecta a los controladores ni a las aplicaciones Java; se conecta directamente a los contenedores PostgreSQL.
 
@@ -192,7 +192,7 @@ Los valores de host, puerto, base, usuario y contraseña deben coincidir entre l
 Desde la raíz del proyecto, inicia pgAdmin y las bases requeridas:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d pgadmin
+docker compose -f infra/docker/docker-compose.yml up -d pgadmin
 ```
 
 Abre [http://localhost:5050](http://localhost:5050) e inicia sesión:

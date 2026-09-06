@@ -8,7 +8,7 @@ flowchart LR
     end
 
     subgraph INFRA["CONFIGURACIÓN DEL PROYECTO"]
-        COMPOSE["infra/docker-compose.yml"]
+        COMPOSE["infra/docker/docker-compose.yml"]
         ALLOY_FILE["observability/alloy/config.alloy<br/>local.file_match<br/>loki.source.file<br/>loki.process<br/>loki.write"]
         LOKI_FILE["observability/loki/loki-config.yml<br/>puerto 3100 · filesystem · TSDB · schema v13"]
         GRAFANA_FILE["observability/grafana/provisioning/<br/>datasources/loki.yml<br/>url: http://loki:3100"]

@@ -1,4 +1,4 @@
-# Guía práctica de Kafbat UI
+# Kafka: guía práctica de Kafbat UI
 
 Kafbat UI permite inspeccionar Kafka desde el navegador. En este proyecto sirve para comprobar qué eventos se publicaron, revisar sus datos y observar el avance de los grupos de consumidores.
 
@@ -172,7 +172,7 @@ Comprueba en este orden:
 8. Que Kafka y Kafbat UI estén activos:
 
 ```bash
-docker compose -f infra/docker-compose.yml ps kafka kafka-ui
+docker compose -f infra/docker/docker-compose.yml ps kafka kafka-ui
 ```
 
 También puedes revisar los logs del productor en Grafana y buscar el `eventId`, `correlationId` u `orderId` cuando esos valores formen parte del mensaje de log.

@@ -25,7 +25,7 @@ Grafana no lee directamente los archivos y Alloy no proporciona una pantalla par
 | Archivo                                                       | Quién lo utiliza | Responsabilidad                                               |
 |--------------------------------------------------------------|-------------------|---------------------------------------------------------------|
 | `backend/*-service/src/main/resources/application-local.yml` | Spring Boot       | Crea el archivo de log de cada backend.                       |
-| `infra/docker-compose.yml`                                   | Docker Compose    | Crea los contenedores, puertos, volúmenes y montajes.         |
+| `infra/docker/docker-compose.yml`                                   | Docker Compose    | Crea los contenedores, puertos, volúmenes y montajes.         |
 | `alloy/config.alloy`                                         | Alloy             | Localiza, etiqueta y procesa los archivos antes de enviarlos. |
 | `loki/loki-config.yml`                                       | Loki              | Configura la recepción, indexación y almacenamiento local.    |
 | `grafana/provisioning/datasources/loki.yml`                  | Grafana           | Registra automáticamente a Loki como fuente de datos.         |
@@ -56,14 +56,14 @@ Los siguientes montajes de `docker-compose.yml` conectan las carpetas del Mac co
 
 ```yaml
 volumes:
-  - ../backend/order-service/logs:/var/log/z4/order-service:ro
+  - ../../backend/order-service/logs:/var/log/z4/order-service:ro
 ```
 
 La estructura significa:
 
 | Parte | Significado |
 |---|---|
-| `../backend/order-service/logs` | Carpeta real del backend en el Mac. |
+| `../../backend/order-service/logs` | Carpeta real del backend en el Mac. |
 | `/var/log/z4/order-service` | Ruta con la que Alloy ve esa carpeta dentro de su contenedor. |
 | `ro` | Montaje de solo lectura; Alloy puede leer los logs, pero no modificarlos. |
 
@@ -265,14 +265,14 @@ Esta etapa centraliza logs y los flujos Kafka registran `eventId`, `correlationI
 
 Los gráficos utilizados para estudiar esta configuración están guardados dentro del proyecto:
 
-1. [Flujo general de observabilidad](docs/images/01-flujo-observabilidad-general.png)
-2. [Diagrama técnico original](docs/images/02-flujo-configuracion-original.png)
-3. [Diagrama técnico con colores](docs/images/03-flujo-configuracion-colores.png)
+1. [Flujo general de observabilidad](../docker/observability/docs/images/01-flujo-observabilidad-general.png)
+2. [Diagrama técnico original](../docker/observability/docs/images/02-flujo-configuracion-original.png)
+3. [Diagrama técnico con colores](../docker/observability/docs/images/03-flujo-configuracion-colores.png)
 
-Las versiones vectoriales se encuentran en [02-flujo-configuracion-original.svg](docs/images/02-flujo-configuracion-original.svg) y [03-flujo-configuracion-colores.svg](docs/images/03-flujo-configuracion-colores.svg). Sus fuentes Mermaid editables se encuentran en la carpeta [docs/mermaid](docs/mermaid).
+Las versiones vectoriales se encuentran en [02-flujo-configuracion-original.svg](../docker/observability/docs/images/02-flujo-configuracion-original.svg) y [03-flujo-configuracion-colores.svg](../docker/observability/docs/images/03-flujo-configuracion-colores.svg). Sus fuentes Mermaid editables se encuentran en la carpeta [mermaid](../docker/observability/docs/mermaid).
 
-Como material adicional, la versión detallada de alto contraste está disponible en [03-flujo-observabilidad-detallado.png](docs/images/03-flujo-observabilidad-detallado.png) y su fuente en [docs/03-flujo-observabilidad-detallado.html](docs/03-flujo-observabilidad-detallado.html).
+Como material adicional, la versión detallada de alto contraste está disponible en [03-flujo-observabilidad-detallado.png](../docker/observability/docs/images/03-flujo-observabilidad-detallado.png).
 
 ## Guía de consultas en Grafana
 
-Las consultas para filtrar por backend, nivel, errores, Kafka, PostgreSQL e identificadores de la Saga se encuentran en [docs/grafana-logql-queries.md](docs/grafana-logql-queries.md).
+Las consultas para filtrar por backend, nivel, errores, Kafka, PostgreSQL e identificadores de la Saga se encuentran en [Consultas LogQL para Grafana](grafana-logql-queries.md).
