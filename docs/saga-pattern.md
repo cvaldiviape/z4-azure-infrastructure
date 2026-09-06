@@ -156,7 +156,7 @@ Cuando una Saga supera el tiempo configurado:
 3. se registra una entrada en `purchase_saga_histories` con el paso anterior y la causa;
 4. el pedido y sus datos recuperables conservan su estado actual, porque el timeout detecta el problema pero no decide automáticamente una cancelación o compensación.
 
-La columna de versión de `purchase_sagas` evita que el timeout sobrescriba silenciosamente una transición Kafka concurrente.
+La columna de versión de `purchase_sagas` evita que el timeout sobrescriba silenciosamente una transición Kafka concurrente. Consulta [Control de concurrencia con `version`](database-strategy.md#control-de-concurrencia-con-version) para ver el `UPDATE` generado y un ejemplo completo de la carrera.
 
 | Propiedad | Variable | Valor predeterminado |
 |-----------------------------------------------|-------------------------------------------|--------------------|

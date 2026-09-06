@@ -51,12 +51,12 @@ Una base con mayor carga puede escalarse, respaldarse o monitorearse de forma di
 
 Cada contenedor ejecuta una instancia PostgreSQL independiente que escucha internamente en el puerto `5432`. Docker publica un puerto distinto en el Mac porque un mismo puerto externo no puede asignarse simultáneamente a cuatro contenedores.
 
-| Servicio Docker | Puerto del Mac | Puerto interno | Base |
-|---|---:|---:|---|
-| `auth-postgres` | 5433 | 5432 | `auth_db` |
-| `orders-postgres` | 5434 | 5432 | `orders_db` |
-| `inventory-postgres` | 5435 | 5432 | `inventory_db` |
-| `payments-postgres` | 5436 | 5432 | `payments_db` |
+| Servicio Docker      | Puerto externo | Puerto interno | Base           |
+|----------------------|----------------|----------------|----------------|
+| `auth-postgres`      | 5433           | 5432           | `auth_db`      |
+| `orders-postgres`    | 5434           | 5432           | `orders_db`    |
+| `inventory-postgres` | 5435           | 5432           | `inventory_db` |
+| `payments-postgres`  | 5436           | 5432           | `payments_db`  |
 
 Esta configuración prioriza el aprendizaje y hace visible el aislamiento:
 
@@ -155,6 +155,93 @@ Motor de base de datos
 
 La mejor opción no es necesariamente la que contiene más funciones, sino la que satisface los requisitos con un costo y riesgo razonables.
 
+## Control de concurrencia con `version`
+
+Las columnas llamadas `version` implementan **bloqueo optimista**. Su objetivo es detectar que otro proceso modificó una fila después de que la aplicación la leyó y evitar que una actualización antigua sobrescriba silenciosamente una más reciente.
+
+La entidad activa este mecanismo con `@Version`:
+
+```java
+@Version
+private Long version;
+```
+
+Hibernate lee el valor junto con la entidad y lo incluye en el `UPDATE`. Si una Saga tiene `version = 3`, la actualización se ejecuta conceptualmente así:
+
+```sql
+UPDATE purchase_sagas
+SET status = 'COMPLETED',
+    version = 4
+WHERE id = 10
+  AND version = 3;
+```
+
+El filtro `version = 3` pregunta: «¿la fila conserva la versión que leí?». Si la respuesta es sí, PostgreSQL actualiza la fila y Hibernate incrementa la versión. La aplicación no debe incrementar este campo manualmente.
+
+### Ejemplo: respuesta de pago contra timeout
+
+Supongamos que dos procesos leen simultáneamente la misma Saga:
+
+```text
+Base de datos
+status  = IN_PROGRESS
+version = 3
+
+Consumidor Kafka              Scheduler de timeout
+lee version = 3               lee version = 3
+recibe PAYMENT_APPROVED       detecta que venció el tiempo
+quiere guardar COMPLETED      quiere guardar TIMED_OUT
+```
+
+Si el consumidor confirma primero:
+
+```text
+PAYMENT_APPROVED
+IN_PROGRESS / version 3
+          ↓
+COMPLETED / version 4
+```
+
+El scheduler todavía intenta modificar la versión anterior:
+
+```sql
+UPDATE purchase_sagas
+SET status = 'TIMED_OUT', version = 4
+WHERE id = 10 AND version = 3;
+```
+
+PostgreSQL modifica cero filas porque la versión actual ya es `4`. Hibernate detecta el conflicto, lanza una excepción de bloqueo optimista y revierte la transacción perdedora. De esta manera, el timeout no reemplaza silenciosamente una respuesta válida que llegó al mismo tiempo.
+
+Sin `version`, el último proceso que escribiera podría ganar aunque trabajara con información desactualizada:
+
+```text
+Consumidor guarda COMPLETED
+Scheduler guarda TIMED_OUT después
+Resultado incorrecto: se pierde COMPLETED
+```
+
+### Bloqueo optimista y pesimista
+
+El timeout de Saga combina dos protecciones:
+
+| Mecanismo | Protección |
+|---|---|
+| `FOR UPDATE SKIP LOCKED` | Evita que dos instancias del scheduler seleccionen y procesen la misma Saga al mismo tiempo. |
+| `@Version` | Detecta que otro flujo, como un consumidor Kafka, modificó la Saga concurrentemente. |
+
+Inventory también contiene una columna `version`. Sus sentencias SQL atómicas de reserva y liberación incrementan explícitamente el valor porque son consultas nativas y no una actualización administrada directamente por Hibernate:
+
+```sql
+UPDATE inventories
+SET available_quantity = available_quantity - :quantity,
+    reserved_quantity = reserved_quantity + :quantity,
+    version = version + 1
+WHERE product_id = :productId
+  AND available_quantity >= :quantity;
+```
+
+`version` no bloquea la fila desde el momento de la lectura. Detecta el conflicto cuando se intenta escribir; por eso se denomina bloqueo **optimista**. Ante un conflicto, la operación perdedora debe releer el estado actual y reintentar solamente cuando hacerlo sea seguro e idempotente.
+
 ## Administración del esquema
 
 Cada backend separa las responsabilidades entre Flyway e Hibernate:
@@ -192,12 +279,12 @@ Contenedor eliminado + volumen eliminado   → datos eliminados
 ## Resumen de la decisión
 
 | Decisión | Motivo |
-|---|---|
-| Una base propiedad de cada servicio | Autonomía y bajo acoplamiento |
-| Cuatro PostgreSQL en local | Hacer explícito el aislamiento durante el aprendizaje |
-| PostgreSQL | Integridad, transacciones, SQL amplio e integración con el stack |
-| Flyway | Versionar y ejecutar cambios del esquema |
-| Hibernate `validate` | Detectar diferencias sin modificar las tablas |
-| Volúmenes Docker | Conservar los datos aunque se recreen los contenedores |
+|-------------------------------------|------------------------------------------------------------------|
+| Una base propiedad de cada servicio | Autonomía y bajo acoplamiento                                    |
+| Cuatro PostgreSQL en local          | Hacer explícito el aislamiento durante el aprendizaje            |
+| PostgreSQL                          | Integridad, transacciones, SQL amplio e integración con el stack |
+| Flyway                              | Versionar y ejecutar cambios del esquema                         |
+| Hibernate `validate`                | Detectar diferencias sin modificar las tablas                    |
+| Volúmenes Docker                    | Conservar los datos aunque se recreen los contenedores           |
 
 En producción, la separación puede implementarse con instancias independientes o con un clúster compartido y bases/usuarios separados, según carga, criticidad, seguridad, experiencia del equipo y presupuesto.
