@@ -213,13 +213,14 @@ Un mensaje en DLT representa un fallo al consumir. Un evento `PENDING` en Outbox
 
 ## Implementación actual y evolución
 
-Actualmente el patrón se implementa primero en `inventory-service` como piloto:
+Actualmente el patrón está implementado en los tres servicios que participan en el flujo Kafka:
 
-- `inbox_events` evita repetir reservas o liberaciones.
-- `outbox_events` conserva `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE` y `STOCK_RELEASED` antes de publicarlos.
-- Un scheduler publica los registros pendientes.
+- Inventory registra en Inbox los comandos de reserva o liberación y conserva en Outbox `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE` y `STOCK_RELEASED`.
+- Payment registra `PAYMENT_REQUESTED` en Inbox y conserva en Outbox `PAYMENT_APPROVED` o `PAYMENT_FAILED`.
+- Order registra en Inbox las respuestas de Inventory y Payment, y conserva en Outbox los comandos y eventos que hacen avanzar o compensar la Saga.
+- Cada servicio tiene su propio scheduler, su propia tabla `inbox_events` y su propia tabla `outbox_events`; ningún servicio consulta las tablas de otro.
 
-Después de validar el comportamiento, el mismo principio debe aplicarse a los demás servicios que modifican su base y publican eventos, especialmente Order y Payment.
+Auth Service no utiliza estos patrones actualmente porque su flujo no consume ni publica eventos Kafka.
 
 Para una evolución más cercana a producción se pueden agregar:
 
