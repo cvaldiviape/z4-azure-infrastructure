@@ -152,11 +152,12 @@ Order ejecuta periódicamente un detector de Sagas que permanecen demasiado tiem
 Cuando una Saga supera el tiempo configurado:
 
 1. la fila se bloquea con `FOR UPDATE SKIP LOCKED` para evitar que dos instancias procesen el mismo timeout;
-2. la Saga cambia a `TIMED_OUT` y su paso actual a `SAGA_TIMED_OUT`;
+2. la Saga cambia a `TIMED_OUT`, pero conserva `current_step` y `last_event_id` como referencias al último avance real;
 3. se registra una entrada en `purchase_saga_histories` con el paso anterior y la causa;
-4. el pedido y sus datos recuperables conservan su estado actual, porque el timeout detecta el problema pero no decide automáticamente una cancelación o compensación.
+4. `timed_out_at` registra cuándo se detectó el vencimiento;
+5. el pedido y sus datos recuperables conservan su estado actual, porque el timeout detecta el problema pero no decide automáticamente una cancelación o compensación.
 
-La columna de versión de `purchase_sagas` evita que el timeout sobrescriba silenciosamente una transición Kafka concurrente. Consulta [Control de concurrencia con `version`](database-strategy.md#control-de-concurrencia-con-version) para ver el `UPDATE` generado y un ejemplo completo de la carrera.
+La columna de versión de `purchase_sagas` evita que el timeout sobrescriba silenciosamente una transición Kafka concurrente. Consulta [Control de concurrencia con `version`](03-database-strategy.md#control-de-concurrencia-con-version) para ver el `UPDATE` generado y un ejemplo completo de la carrera.
 
 | Propiedad | Variable | Valor predeterminado |
 |-----------------------------------------------|-------------------------------------------|--------------------|
@@ -165,9 +166,56 @@ La columna de versión de `purchase_sagas` evita que el timeout sobrescriba sile
 | `app.saga.timeout-poll-interval-milliseconds` | `SAGA_TIMEOUT_POLL_INTERVAL_MILLISECONDS` | 30000              |
 | `app.saga.timeout-initial-delay-milliseconds` | `SAGA_TIMEOUT_INITIAL_DELAY_MILLISECONDS` | 30000              |
 
-El log `action=saga_timed_out` permite localizar cada caso por `correlationId` y `orderId`. La reconciliación posterior debe decidir si corresponde reanudar, compensar o cerrar manualmente la compra. Un evento tardío o reproducido todavía puede llevar la Saga desde `TIMED_OUT` a `IN_PROGRESS`, `COMPENSATING` o `COMPLETED`; el Inbox evita repetir los efectos de un `eventId` que ya fue procesado.
+El log `action=saga_timed_out` permite localizar cada caso por `correlationId` y `orderId`. La reconciliación puede utilizar directamente `current_step`, sin interpretar el texto de error, para decidir si corresponde reanudar, compensar o cerrar manualmente la compra. Un evento tardío o reproducido todavía puede llevar la Saga desde `TIMED_OUT` a `IN_PROGRESS`, `COMPENSATING` o `COMPLETED`; al hacerlo se limpia `timed_out_at`, y el Inbox evita repetir los efectos de un `eventId` que ya fue procesado.
 
 `FAILED` queda reservado para una recuperación agotada o un caso declarado irrecuperable, no para la simple ausencia temporal de una respuesta.
+
+### Validar un timeout recuperable
+
+Para probar el comportamiento sin esperar cinco minutos, configura temporalmente Order Service:
+
+```text
+SAGA_TIMEOUT_MILLISECONDS=30000
+SAGA_TIMEOUT_POLL_INTERVAL_MILLISECONDS=5000
+SAGA_TIMEOUT_INITIAL_DELAY_MILLISECONDS=5000
+```
+
+Después ejecuta Auth, Order e Inventory, pero deja Payment apagado. Crea un pedido con stock disponible y `paymentToken: "TEST_APPROVED"`. El flujo avanzará hasta `PAYMENT_REQUESTED` y, como Payment no consume el comando, la Saga pasará aproximadamente después de 30 segundos a:
+
+```text
+status       = TIMED_OUT
+current_step = STOCK_RESERVED
+timed_out_at = instante de detección
+error_message = Saga timed out while waiting after step STOCK_RESERVED
+```
+
+Puede comprobarse con:
+
+```sql
+SELECT order_id, status, current_step, last_event_id,
+       error_message, updated_at, timed_out_at, version
+FROM purchase_sagas
+ORDER BY id DESC;
+```
+
+El historial debe contener la detección:
+
+```sql
+SELECT order_id, order_status, saga_status, event_type,
+       event_id, error_message, created_at
+FROM purchase_saga_histories
+ORDER BY id DESC;
+```
+
+Luego inicia Payment. Kafka entregará el `PAYMENT_REQUESTED` que permanecía en el topic y, tras procesarse `PAYMENT_APPROVED`, el resultado esperado será:
+
+```text
+Order.status = CONFIRMED
+Saga.status  = COMPLETED
+Saga.current_step = PAYMENT_APPROVED
+```
+
+Esta prueba demuestra que `TIMED_OUT` señala una demora anormal, pero no impide que un mensaje tardío continúe la compra. Al finalizar, elimina las variables temporales para recuperar el timeout predeterminado de cinco minutos.
 
 ## Consistencia y tolerancia a fallos
 
@@ -181,9 +229,9 @@ Estos mecanismos ofrecen procesamiento práctico **al menos una vez con efectos 
 
 Consulta también:
 
-- [Transactional Inbox y Outbox](transactional-inbox-outbox.md)
-- [Reintentos y DLT](kafka-retries-dlt.md)
-- [Fundamentos de Kafka](kafka-fundamentals.md)
+- [Transactional Inbox y Outbox](09-transactional-inbox-outbox.md)
+- [Reintentos y DLT](07-kafka-retries-dlt.md)
+- [Fundamentos de Kafka](05-kafka-fundamentals.md)
 
 ## Cómo seguir una Saga
 
