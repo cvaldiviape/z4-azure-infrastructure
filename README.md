@@ -27,6 +27,7 @@ Orden de lectura recomendado para entender el procesamiento distribuido:
 | 08 | [Saga de compra](docs/08-saga-pattern.md) | Orquestación, estados, compensaciones y timeout. |
 | 09 | [Transactional Inbox y Outbox](docs/09-transactional-inbox-outbox.md) | Consistencia, idempotencia y publicación confiable. |
 | 12 | [Reconciliación de Sagas](docs/12-saga-reconciliation.md) | Diagnóstico por lotes previo al replay. |
+| 13 | [Convención de nombres para topics](docs/13-kafka-topic-naming.md) | Topics orientados a capacidades, solicitudes, resultados y eventos públicos. |
 
 ### Infraestructura y datos
 

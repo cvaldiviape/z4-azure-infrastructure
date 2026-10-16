@@ -68,10 +68,10 @@ Los valores se pueden sobrescribir con variables de entorno sin modificar el có
 
 | Consumer | Topic original | Topic de mensajes no recuperados |
 |---|---|---|
-| Inventory Service | `inventory-commands-topic` | `inventory-commands-topic-dlt` |
-| Payment Service | `payments-commands-topic` | `payments-commands-topic-dlt` |
-| Order Service | `inventory-events-topic` | `inventory-events-topic-dlt` |
-| Order Service | `payments-events-topic` | `payments-events-topic-dlt` |
+| Inventory Service | `inventory-reservation-requests-topic` | `inventory-reservation-requests-topic-dlt` |
+| Payment Service | `payment-processing-requests-topic` | `payment-processing-requests-topic-dlt` |
+| Order Service | `inventory-reservation-results-topic` | `inventory-reservation-results-topic-dlt` |
+| Order Service | `payment-processing-results-topic` | `payment-processing-results-topic-dlt` |
 
 El DLT no es un log ni elimina el mensaje original. Es otro topic Kafka que conserva el key, el value y headers de diagnóstico como el topic, partición y offset originales, además de información sobre la excepción.
 

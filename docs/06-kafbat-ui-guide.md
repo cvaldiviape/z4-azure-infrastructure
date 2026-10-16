@@ -18,20 +18,20 @@ Para aprender el flujo de una orden se utilizarán principalmente **Topics > Mes
 
 | Topic                    | Publica                           | Consume                         | Eventos principales                                       |
 |--------------------------|-----------------------------------|---------------------------------|-----------------------------------------------------------|
-| `inventory-commands-topic` | Order Service | Inventory Service | `RESERVE_STOCK`, `RELEASE_STOCK` |
-| `inventory-events-topic` | Inventory Service | Order Service | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
-| `payments-commands-topic` | Order Service | Payment Service | `PAYMENT_REQUESTED` |
-| `payments-events-topic` | Payment Service | Order Service | `PAYMENT_APPROVED`, `PAYMENT_FAILED` |
-| `orders-events-topic` | Order Service | Consumidores futuros | `ORDER_CANCELLED` |
+| `inventory-reservation-requests-topic` | Order Service | Inventory Service | `RESERVE_STOCK`, `RELEASE_STOCK` |
+| `inventory-reservation-results-topic` | Inventory Service | Order Service | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
+| `payment-processing-requests-topic` | Order Service | Payment Service | `PAYMENT_REQUESTED` |
+| `payment-processing-results-topic` | Payment Service | Order Service | `PAYMENT_APPROVED`, `PAYMENT_FAILED` |
+| `order-status-events-topic` | Order Service | Consumidores futuros | `ORDER_CANCELLED` |
 
 Cuando un consumer agota sus intentos, Spring Kafka conserva el mensaje en el DLT asociado:
 
 | Topic original | Dead Letter Topic |
 |---|---|
-| `inventory-commands-topic` | `inventory-commands-topic-dlt` |
-| `payments-commands-topic` | `payments-commands-topic-dlt` |
-| `inventory-events-topic` | `inventory-events-topic-dlt` |
-| `payments-events-topic` | `payments-events-topic-dlt` |
+| `inventory-reservation-requests-topic` | `inventory-reservation-requests-topic-dlt` |
+| `payment-processing-requests-topic` | `payment-processing-requests-topic-dlt` |
+| `inventory-reservation-results-topic` | `inventory-reservation-results-topic-dlt` |
+| `payment-processing-results-topic` | `payment-processing-results-topic-dlt` |
 
 El flujo de reintentos, los headers de diagnóstico y las precauciones para reprocesar se detallan en [reintentos y DLT](07-kafka-retries-dlt.md).
 
@@ -40,7 +40,7 @@ Los topics de comandos representan acciones solicitadas a un servicio. Los topic
 ## Buscar mensajes de un topic
 
 1. Entra en **Topics**.
-2. Selecciona, por ejemplo, `inventory-commands-topic`.
+2. Selecciona, por ejemplo, `inventory-reservation-requests-topic`.
 3. Abre la pestaña **Messages**.
 4. Selecciona **Oldest** para empezar por los eventos más antiguos o **Newest** para ver primero los recientes.
 5. En **Select partitions**, elige todas las particiones o una partición concreta.
@@ -76,7 +76,7 @@ Un mensaje puede tener una estructura similar a esta:
   "eventVersion": 1,
   "aggregateId": "15",
   "correlationId": "identificador-compartido-por-el-flujo",
-  "causationId": null,
+  "previousEventId": null,
   "timestamp": "2026-08-30T15:15:00",
   "producer": "order-service",
   "payload": {}
@@ -89,7 +89,7 @@ Un mensaje puede tener una estructura similar a esta:
 | `eventType`     | Indica lo que ocurrió o lo que se solicita ejecutar.                   |
 | `aggregateId`   | Identifica la entidad principal; normalmente corresponde al `orderId`. |
 | `correlationId` | Relaciona todos los eventos pertenecientes al mismo flujo de compra.   |
-| `causationId`   | Indica qué evento anterior causó el evento actual.                     |
+| `previousEventId` | Indica qué evento anterior causó directamente el evento actual.      |
 | `producer`      | Servicio que publicó el evento.                                        |
 | `payload`       | Datos requeridos por el consumidor para procesar el evento.            |
 
@@ -97,24 +97,24 @@ Para seguir una compra completa, el valor más útil es `correlationId`. Para in
 
 ## Seguir una orden entre topics
 
-1. Busca el `RESERVE_STOCK` en `inventory-commands-topic`.
+1. Busca el `RESERVE_STOCK` en `inventory-reservation-requests-topic`.
 2. Copia su `correlationId`.
-3. Busca ese valor en `inventory-events-topic` para encontrar `STOCK_RESERVED` o `STOCK_NOT_AVAILABLE`.
-4. Busca el mismo valor en `payments-commands-topic` para encontrar `PAYMENT_REQUESTED` y en `payments-events-topic` para encontrar `PAYMENT_APPROVED` o `PAYMENT_FAILED`.
+3. Busca ese valor en `inventory-reservation-results-topic` para encontrar `STOCK_RESERVED` o `STOCK_NOT_AVAILABLE`.
+4. Busca el mismo valor en `payment-processing-requests-topic` para encontrar `PAYMENT_REQUESTED` y en `payment-processing-results-topic` para encontrar `PAYMENT_APPROVED` o `PAYMENT_FAILED`.
 
 Flujo exitoso esperado:
 
 ```text
-inventory-commands-topic
+inventory-reservation-requests-topic
   RESERVE_STOCK
         ↓
-inventory-events-topic
+inventory-reservation-results-topic
   STOCK_RESERVED
         ↓
-payments-commands-topic
+payment-processing-requests-topic
   PAYMENT_REQUESTED
         ↓
-payments-events-topic
+payment-processing-results-topic
   PAYMENT_APPROVED
         ↓
 Order Service actualiza la orden a CONFIRMED
