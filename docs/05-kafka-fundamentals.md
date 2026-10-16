@@ -21,7 +21,7 @@ En este proyecto, por ejemplo:
 Order Service
     │ publica RESERVE_STOCK
     ▼
-inventory-commands-topic
+inventory-reservation-requests-topic
     │ consume
     ▼
 Inventory Service
@@ -50,11 +50,11 @@ Los topics principales del proyecto son:
 
 | Topic | Publica | Consume | Propósito |
 |---|---|---|---|
-| `inventory-commands-topic` | Order Service | Inventory Service | Solicitar reserva o liberación de stock. |
-| `inventory-events-topic` | Inventory Service | Order Service | Informar el resultado de inventario. |
-| `payments-commands-topic` | Order Service | Payment Service | Solicitar un pago. |
-| `payments-events-topic` | Payment Service | Order Service | Informar si el pago fue aprobado o rechazado. |
-| `orders-events-topic` | Order Service | Consumidores futuros | Informar resultados del pedido. |
+| `inventory-reservation-requests-topic` | Order Service | Inventory Service | Solicitar reserva o liberación de stock. |
+| `inventory-reservation-results-topic` | Inventory Service | Order Service | Informar el resultado de una reserva. |
+| `payment-processing-requests-topic` | Order Service | Payment Service | Solicitar el procesamiento de un pago. |
+| `payment-processing-results-topic` | Payment Service | Order Service | Informar si el pago fue aprobado o rechazado. |
+| `order-status-events-topic` | Order Service | Consumidores futuros | Informar cambios en el estado del pedido. |
 
 Kafka conserva los mensajes aunque ya hayan sido consumidos. La retención depende de su configuración; consumir no equivale a eliminar.
 
@@ -72,7 +72,7 @@ Comando: «reserva este stock»
 Evento:  «el stock fue reservado»
 ```
 
-Por eso los nombres terminan en `-commands-topic` o `-events-topic`.
+En este proyecto, las solicitudes se agrupan en `*-requests-topic`, sus desenlaces en `*-results-topic` y los hechos públicos que no son una respuesta directa en `*-events-topic`.
 
 ## Mensaje: key, value y headers
 
@@ -85,13 +85,13 @@ Cada registro de Kafka contiene principalmente:
 | `headers` | Contiene metadatos adicionales; los DLT agregan información del error. |
 | `timestamp` | Indica cuándo Kafka registró el mensaje. |
 
-El `value` utiliza `EventEnvelopeDto`, que incluye datos como:
+El `value` utiliza `IntegrationEventDto`, que incluye datos como:
 
 - `eventId`: identidad única del evento.
 - `eventType`: tipo como `RESERVE_STOCK`.
 - `aggregateId`: pedido relacionado.
 - `correlationId`: conecta todos los mensajes de una misma Saga.
-- `causationId`: identifica el evento que causó el actual.
+- `previousEventId`: identifica el evento anterior que causó directamente el actual.
 - `payload`: datos específicos del evento.
 
 El `correlationId` permite reconstruir el recorrido completo de una compra entre varios topics y servicios.
@@ -151,7 +151,7 @@ Kafka usa esta posición para saber hasta dónde avanzó un grupo consumidor. El
 Cada consumer pertenece a un **consumer group**. Kafka guarda el avance de cada grupo por separado.
 
 ```text
-inventory-commands-topic
+inventory-reservation-requests-topic
         │
         ├── Grupo inventory-service → procesa inventario
         └── Grupo auditoria         → podría guardar auditoría
@@ -219,10 +219,10 @@ Estos son reintentos bloqueantes: ocurren en el consumer sobre el mismo mensaje 
 Si todos los intentos fallan, el mensaje se publica en un **Dead Letter Topic** o DLT:
 
 ```text
-inventory-commands-topic
+inventory-reservation-requests-topic
         │ tres intentos fallidos
         ▼
-inventory-commands-topic-dlt
+inventory-reservation-requests-topic-dlt
 ```
 
 El DLT permite apartar el mensaje problemático para investigarlo sin bloquear permanentemente la partición original. No corrige el error ni reprocesa el mensaje automáticamente.
@@ -242,7 +242,7 @@ La operación coloca el mensaje en Kafka; no ejecuta directamente el método del
 Un consumer declara su suscripción con `@KafkaListener`:
 
 ```java
-@KafkaListener(topics = "inventory-commands-topic")
+@KafkaListener(topics = "inventory-reservation-requests-topic")
 public void consume(String message) {
   // deserializar y procesar
 }
@@ -256,10 +256,10 @@ El camino exitoso de una compra es:
 
 ```text
 1. Cliente crea pedido por HTTP
-2. Order publica RESERVE_STOCK       → inventory-commands-topic
-3. Inventory publica STOCK_RESERVED  → inventory-events-topic
-4. Order publica PAYMENT_REQUESTED   → payments-commands-topic
-5. Payment publica PAYMENT_APPROVED  → payments-events-topic
+2. Order publica RESERVE_STOCK       → inventory-reservation-requests-topic
+3. Inventory publica STOCK_RESERVED  → inventory-reservation-results-topic
+4. Order publica PAYMENT_REQUESTED   → payment-processing-requests-topic
+5. Payment publica PAYMENT_APPROVED  → payment-processing-results-topic
 6. Order confirma el pedido
 ```
 

@@ -33,17 +33,17 @@ La consistencia es **eventual**: durante unos instantes cada servicio puede obse
 
 | Topic                      | Productor | Consumidor                         | Tipos usados por la Saga                                  |
 |----------------------------|-----------|------------------------------------|-----------------------------------------------------------|
-| `inventory-commands-topic` | Order     | Inventory                          | `RESERVE_STOCK`, `RELEASE_STOCK`                          |
-| `inventory-events-topic`   | Inventory | Order                              | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
-| `payments-commands-topic`  | Order     | Payment                            | `PAYMENT_REQUESTED`                                       |
-| `payments-events-topic`    | Payment   | Order                              | `PAYMENT_APPROVED`, `PAYMENT_FAILED`                      |
-| `orders-events-topic`      | Order     | Consumidores de eventos de pedidos | `ORDER_CANCELLED`                                         |
+| `inventory-reservation-requests-topic` | Order     | Inventory                          | `RESERVE_STOCK`, `RELEASE_STOCK`                          |
+| `inventory-reservation-results-topic`  | Inventory | Order                              | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
+| `payment-processing-requests-topic`    | Order     | Payment                            | `PAYMENT_REQUESTED`                                       |
+| `payment-processing-results-topic`     | Payment   | Order                              | `PAYMENT_APPROVED`, `PAYMENT_FAILED`                      |
+| `order-status-events-topic`            | Order     | Consumidores de eventos de pedidos | `ORDER_CANCELLED`                                         |
 
-Los mensajes utilizan un sobre común con datos como `eventId`, `eventType`, `aggregateId`, `correlationId`, `causationId`, `producer`, `timestamp` y `payload`.
+Los mensajes utilizan un contrato común con datos como `eventId`, `eventType`, `aggregateId`, `correlationId`, `previousEventId`, `producer`, `timestamp` y `payload`.
 
 - `aggregateId` identifica el pedido.
 - `correlationId` permanece estable durante toda la compra.
-- `causationId` apunta al evento que provocó el mensaje actual.
+- `previousEventId` apunta al evento anterior que provocó directamente el mensaje actual.
 - `eventId` identifica de forma única cada mensaje y permite deduplicarlo mediante Inbox.
 
 ## Camino exitoso
@@ -55,23 +55,23 @@ Cliente
 Order
   ├─ crea Order: CREATED
   ├─ crea Saga: STARTED / ORDER_CREATED
-  └─ Outbox: RESERVE_STOCK ───────────────► inventory-commands-topic
+  └─ Outbox: RESERVE_STOCK ───────────────► inventory-reservation-requests-topic
                                                    │
                                                    ▼
 Inventory
   ├─ reserva stock
-  └─ Outbox: STOCK_RESERVED ──────────────► inventory-events-topic
+  └─ Outbox: STOCK_RESERVED ──────────────► inventory-reservation-results-topic
                                                    │
                                                    ▼
 Order
   ├─ Order: PAYMENT_PENDING
   ├─ Saga: IN_PROGRESS / STOCK_RESERVED
-  └─ Outbox: PAYMENT_REQUESTED ───────────► payments-commands-topic
+  └─ Outbox: PAYMENT_REQUESTED ───────────► payment-processing-requests-topic
                                                    │
                                                    ▼
 Payment
   ├─ registra pago APPROVED
-  └─ Outbox: PAYMENT_APPROVED ────────────► payments-events-topic
+  └─ Outbox: PAYMENT_APPROVED ────────────► payment-processing-results-topic
                                                    │
                                                    ▼
 Order
@@ -93,7 +93,7 @@ STOCK_NOT_AVAILABLE
 Order: CANCELLED
 Saga: COMPLETED / ORDER_CANCELLED
       ↓
-orders-events-topic: ORDER_CANCELLED
+order-status-events-topic: ORDER_CANCELLED
 ```
 
 No se solicita ningún pago. Si algunos productos ya fueron reservados antes de encontrar el faltante, `StockServiceImpl` los libera dentro de la misma transacción local antes de publicar `STOCK_NOT_AVAILABLE`.
@@ -107,18 +107,18 @@ PAYMENT_FAILED
       ↓
 Order Saga: COMPENSATING / PAYMENT_FAILED
       ↓
-RELEASE_STOCK ────────────────────────────► inventory-commands-topic
+RELEASE_STOCK ────────────────────────────► inventory-reservation-requests-topic
                                                    │
                                                    ▼
 Inventory libera las reservas
       │
-      └─ STOCK_RELEASED ──────────────────► inventory-events-topic
+      └─ STOCK_RELEASED ──────────────────► inventory-reservation-results-topic
                                                    │
                                                    ▼
 Order: CANCELLED
 Saga: COMPLETED / ORDER_CANCELLED
       ↓
-orders-events-topic: ORDER_CANCELLED
+order-status-events-topic: ORDER_CANCELLED
 ```
 
 La compensación no es un rollback distribuido. `RELEASE_STOCK` es una nueva operación de negocio que deshace semánticamente la reserva ya confirmada.

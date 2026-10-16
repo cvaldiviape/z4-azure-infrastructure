@@ -17,7 +17,7 @@ Una implementación directa podría ser:
 
 ```java
 inventoryRepository.reserveIfAvailable(productId, quantity);
-kafkaTemplate.send("inventory-events-topic", event);
+kafkaTemplate.send("inventory-reservation-results-topic", event);
 ```
 
 Esta operación se conoce como **dual write** o doble escritura. Puede fallar de distintas maneras.
@@ -73,7 +73,7 @@ outbox_events: PENDING
         ↓
 Outbox Publisher
         ↓
-inventory-events-topic
+inventory-reservation-results-topic
         ↓
 ACK de Kafka
         ↓
