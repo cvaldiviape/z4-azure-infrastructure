@@ -2,33 +2,48 @@
 
 Proyecto educativo con cuatro microservicios Spring Boot 4, Java 21, PostgreSQL y Kafka. Las aplicaciones se ejecutan desde IntelliJ para permitir debugging; Docker se utiliza únicamente para Kafka y las bases de datos.
 
-## Documentación
+## Documentación de servicios
 
 | Componente | Documentación |
 |---|---|
-| Infraestructura local | [docs/infrastructure-local.md](docs/infrastructure-local.md) |
+| Infraestructura local | [docs/01-infrastructure-local.md](docs/01-infrastructure-local.md) |
 | Autenticación | [backend/auth-service/README.md](../backend/auth-service/README.md) |
 | Pedidos y Saga de compra | [backend/order-service/README.md](../backend/order-service/README.md) |
 | Inventario | [backend/inventory-service/README.md](../backend/inventory-service/README.md) |
 | Pagos | [backend/payment-service/README.md](../backend/payment-service/README.md) |
 
-### Guías de infraestructura
+## Guías centrales
 
 Toda la documentación de infraestructura está centralizada en [`docs`](docs):
 
-| Área | Guía | Contenido |
-|---|---|---|
-| Inicio | [Infraestructura local](docs/infrastructure-local.md) | Componentes, puertos, ejecución y credenciales locales. |
-| Docker | [Volúmenes y persistencia](docs/docker-volumes.md) | Volúmenes administrados, bind mounts y conservación de datos. |
-| Kafka | [Fundamentos](docs/kafka-fundamentals.md) | Brokers, topics, particiones, offsets y consumer groups. |
-| Kafka | [Kafbat UI](docs/kafbat-ui-guide.md) | Inspección de mensajes, consumidores, offsets y lag. |
-| Kafka | [Reintentos y DLT](docs/kafka-retries-dlt.md) | Clasificación de errores, reintentos y mensajes fallidos. |
-| Arquitectura | [Saga de compra](docs/saga-pattern.md) | Orquestación, estados, caminos exitosos y compensaciones. |
-| Arquitectura | [Transactional Inbox y Outbox](docs/transactional-inbox-outbox.md) | Consistencia, idempotencia y publicación confiable de eventos. |
-| PostgreSQL | [Estrategia de bases de datos](docs/database-strategy.md) | Database per service, Flyway y aislamiento de datos. |
-| PostgreSQL | [pgAdmin](docs/pgadmin.md) | Conexiones locales y archivos de configuración. |
-| Observabilidad | [Logs con Alloy, Loki y Grafana](docs/observability.md) | Arquitectura y configuración de la plataforma de logs. |
-| Observabilidad | [Consultas LogQL](docs/grafana-logql-queries.md) | Búsquedas y filtros prácticos para Grafana. |
+### Arquitectura y confiabilidad
+
+Orden de lectura recomendado para entender el procesamiento distribuido:
+
+| Orden | Guía | Contenido |
+|---:|---|---|
+| 05 | [Fundamentos de Kafka](docs/05-kafka-fundamentals.md) | Brokers, topics, particiones, offsets y consumer groups. |
+| 07 | [Reintentos y DLT](docs/07-kafka-retries-dlt.md) | Clasificación de errores, reintentos y mensajes fallidos. |
+| 08 | [Saga de compra](docs/08-saga-pattern.md) | Orquestación, estados, compensaciones y timeout. |
+| 09 | [Transactional Inbox y Outbox](docs/09-transactional-inbox-outbox.md) | Consistencia, idempotencia y publicación confiable. |
+| 12 | [Reconciliación de Sagas](docs/12-saga-reconciliation.md) | Diagnóstico por lotes previo al replay. |
+
+### Infraestructura y datos
+
+| Guía | Contenido |
+|---|---|
+| [01 · Infraestructura local](docs/01-infrastructure-local.md) | Componentes, puertos, ejecución y credenciales locales. |
+| [02 · Volúmenes y persistencia](docs/02-docker-volumes.md) | Volúmenes administrados, bind mounts y conservación de datos. |
+| [03 · Estrategia de bases de datos](docs/03-database-strategy.md) | Database per service, Flyway, concurrencia y aislamiento. |
+| [04 · pgAdmin](docs/04-pgadmin.md) | Conexiones locales y archivos de configuración. |
+| [06 · Kafbat UI](docs/06-kafbat-ui-guide.md) | Inspección de mensajes, consumidores, offsets y lag. |
+
+### Observabilidad
+
+| Guía | Contenido |
+|---|---|
+| [10 · Logs con Alloy, Loki y Grafana](docs/10-observability.md) | Arquitectura y configuración de la plataforma de logs. |
+| [11 · Consultas LogQL](docs/11-grafana-logql-queries.md) | Búsquedas y filtros prácticos para Grafana. |
 
 Este README funciona como portada e índice. Cada guía documenta una responsabilidad concreta. Cuando cambie un puerto, topic, consumer group, variable o decisión operativa, se debe actualizar la guía correspondiente en el mismo commit.
 
@@ -39,7 +54,7 @@ ORDER_CREATED
 → STOCK_RESERVED
 → PAYMENT_REQUESTED
 → PAYMENT_APPROVED
-→ ORDER_CONFIRMED
+→ Order: CONFIRMED
 ```
 
 Cuando el pago falla:

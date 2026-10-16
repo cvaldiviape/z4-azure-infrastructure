@@ -315,6 +315,6 @@ Kafka por sí solo no garantiza:
 5. Revisa el consumer group y su lag.
 6. Detén temporalmente un consumer, publica mensajes y observa cómo aumenta el lag.
 7. Inícialo nuevamente y observa cómo recupera el avance pendiente.
-8. Después estudia [reintentos y DLT](kafka-retries-dlt.md).
+8. Después estudia [reintentos y DLT](07-kafka-retries-dlt.md).
 
-La inspección paso a paso desde la interfaz está en la [guía de Kafbat UI](kafbat-ui-guide.md).
+La inspección paso a paso desde la interfaz está en la [guía de Kafbat UI](06-kafbat-ui-guide.md).

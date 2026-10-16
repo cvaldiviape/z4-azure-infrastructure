@@ -33,7 +33,7 @@ Cuando un consumer agota sus intentos, Spring Kafka conserva el mensaje en el DL
 | `inventory-events-topic` | `inventory-events-topic-dlt` |
 | `payments-events-topic` | `payments-events-topic-dlt` |
 
-El flujo de reintentos, los headers de diagnóstico y las precauciones para reprocesar se detallan en [kafka-retries-dlt.md](kafka-retries-dlt.md).
+El flujo de reintentos, los headers de diagnóstico y las precauciones para reprocesar se detallan en [reintentos y DLT](07-kafka-retries-dlt.md).
 
 Los topics de comandos representan acciones solicitadas a un servicio. Los topics de eventos representan resultados que ya ocurrieron. Los consumer groups registran el avance de cada suscriptor.
 

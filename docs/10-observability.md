@@ -275,4 +275,4 @@ Como material adicional, la versión detallada de alto contraste está disponibl
 
 ## Guía de consultas en Grafana
 
-Las consultas para filtrar por backend, nivel, errores, Kafka, PostgreSQL e identificadores de la Saga se encuentran en [Consultas LogQL para Grafana](grafana-logql-queries.md).
+Las consultas para filtrar por backend, nivel, errores, Kafka, PostgreSQL e identificadores de la Saga se encuentran en [Consultas LogQL para Grafana](11-grafana-logql-queries.md).
