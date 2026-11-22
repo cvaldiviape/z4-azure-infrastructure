@@ -31,8 +31,8 @@ La consistencia es **eventual**: durante unos instantes cada servicio puede obse
 
 ## Topics y mensajes
 
-| Topic                      | Productor | Consumidor                         | Tipos usados por la Saga                                  |
-|----------------------------|-----------|------------------------------------|-----------------------------------------------------------|
+| Topic                                  | Productor | Consumidor                         | Tipos usados por la Saga                                  |
+|----------------------------------------|-----------|------------------------------------|-----------------------------------------------------------|
 | `inventory-reservation-requests-topic` | Order     | Inventory                          | `RESERVE_STOCK`, `RELEASE_STOCK`                          |
 | `inventory-reservation-results-topic`  | Inventory | Order                              | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
 | `payment-processing-requests-topic`    | Order     | Payment                            | `PAYMENT_REQUESTED`                                       |
