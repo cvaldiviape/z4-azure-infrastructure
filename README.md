@@ -44,6 +44,7 @@ Orden de lectura recomendado para entender el procesamiento distribuido:
 | [01 · Infraestructura local][d01]        | Componentes, puertos, ejecución y credenciales locales.       |
 | [02 · Volúmenes y persistencia][d02]     | Volúmenes administrados, bind mounts y conservación de datos. |
 | [03 · Estrategia de bases de datos][d03] | Database per service, Flyway, concurrencia y aislamiento.     |
+| [20 · Bases de datos y tablas][d20]      | Qué tablas tiene cada base y para qué sirven.                 |
 | [04 · pgAdmin][d04]                      | Conexiones locales y archivos de configuración.               |
 | [06 · Kafbat UI][d06]                    | Inspección de mensajes, consumidores, offsets y lag.          |
 
@@ -264,3 +265,4 @@ No agregues `-v` al comando anterior si deseas conservar los datos.
 [d17]: docs/17-kafka-broker.md
 [d18]: docs/18-ops-service.md
 [d19]: docs/19-roadmap.md
+[d20]: docs/20-database-tables.md

@@ -11,6 +11,7 @@ auth-service      → auth-postgres      → auth_db
 order-service     → orders-postgres    → orders_db
 inventory-service → inventory-postgres → inventory_db
 payment-service   → payments-postgres  → payments_db
+ops-service       → ops-postgres       → ops_db
 ```
 
 Ser propietario de una base significa que solamente el microservicio responsable puede consultar o modificar directamente sus tablas.
@@ -47,9 +48,9 @@ En producción, cada servicio puede utilizar credenciales con acceso exclusivo a
 
 Una base con mayor carga puede escalarse, respaldarse o monitorearse de forma diferente. Por ejemplo, Inventory podría recibir más escrituras concurrentes que Auth.
 
-## Por qué existen cuatro contenedores en local
+## Por qué existen cinco contenedores en local
 
-Cada contenedor ejecuta una instancia PostgreSQL independiente que escucha internamente en el puerto `5432`. Docker publica un puerto distinto en el Mac porque un mismo puerto externo no puede asignarse simultáneamente a cuatro contenedores.
+Cada contenedor ejecuta una instancia PostgreSQL independiente que escucha internamente en el puerto `5432`. Docker publica un puerto distinto en el Mac porque un mismo puerto externo no puede asignarse simultáneamente a varios contenedores.
 
 | #   | Servicio Docker      | Puerto externo | Puerto interno | Base           |
 |-----|----------------------|----------------|----------------|----------------|
@@ -57,6 +58,9 @@ Cada contenedor ejecuta una instancia PostgreSQL independiente que escucha inter
 | 2   | `orders-postgres`    | 5434           | 5432           | `orders_db`    |
 | 3   | `inventory-postgres` | 5435           | 5432           | `inventory_db` |
 | 4   | `payments-postgres`  | 5436           | 5432           | `payments_db`  |
+| 5   | `ops-postgres`       | 5437           | 5432           | `ops_db`       |
+
+Las tablas de cada base están en [20 · Bases de datos y tablas](20-database-tables.md).
 
 Esta configuración prioriza el aprendizaje y hace visible el aislamiento:
 
