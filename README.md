@@ -11,6 +11,8 @@ Proyecto educativo con cuatro microservicios Spring Boot 4, Java 21, PostgreSQL 
 | 3   | Pedidos y Saga de compra | [backend/order-service/README.md](../backend/order-service/README.md)         |
 | 4   | Inventario               | [backend/inventory-service/README.md](../backend/inventory-service/README.md) |
 | 5   | Pagos                    | [backend/payment-service/README.md](../backend/payment-service/README.md)     |
+| 6   | Operaciones (DLT)        | [docs/18-ops-service.md](docs/18-ops-service.md)                              |
+| 7   | Plan a futuro            | [docs/19-roadmap.md](docs/19-roadmap.md)                                      |
 
 ## Guías centrales
 
@@ -32,6 +34,8 @@ Orden de lectura recomendado para entender el procesamiento distribuido:
 | 15    | [Estado de confiabilidad][d15]         | Qué está aplicado, qué resuelve cada mecanismo y qué falta.         |
 | 16    | [ACK del producer y del consumer][d16] | Confirmación de envío, commit del offset y qué pasa si falta.       |
 | 17    | [Qué es un broker][d17]                | Responsabilidades, clúster, KRaft, listeners y el broker local.     |
+| 18    | [Ops Service y librerías][d18]         | DLT guardado, replay, API de Sagas y librerías `z4-shared-*`.       |
+| 19    | [Plan a futuro][d19]                   | Multi-tenant, los tres fronts, orden de trabajo y pendientes.       |
 
 ### Infraestructura y datos
 
@@ -208,3 +212,5 @@ No agregues `-v` al comando anterior si deseas conservar los datos.
 [d15]: docs/15-reliability-status.md
 [d16]: docs/16-kafka-acknowledgments.md
 [d17]: docs/17-kafka-broker.md
+[d18]: docs/18-ops-service.md
+[d19]: docs/19-roadmap.md
