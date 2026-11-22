@@ -51,12 +51,12 @@ Una base con mayor carga puede escalarse, respaldarse o monitorearse de forma di
 
 Cada contenedor ejecuta una instancia PostgreSQL independiente que escucha internamente en el puerto `5432`. Docker publica un puerto distinto en el Mac porque un mismo puerto externo no puede asignarse simultáneamente a cuatro contenedores.
 
-| Servicio Docker      | Puerto externo | Puerto interno | Base           |
-|----------------------|----------------|----------------|----------------|
-| `auth-postgres`      | 5433           | 5432           | `auth_db`      |
-| `orders-postgres`    | 5434           | 5432           | `orders_db`    |
-| `inventory-postgres` | 5435           | 5432           | `inventory_db` |
-| `payments-postgres`  | 5436           | 5432           | `payments_db`  |
+| #   | Servicio Docker      | Puerto externo | Puerto interno | Base           |
+|-----|----------------------|----------------|----------------|----------------|
+| 1   | `auth-postgres`      | 5433           | 5432           | `auth_db`      |
+| 2   | `orders-postgres`    | 5434           | 5432           | `orders_db`    |
+| 3   | `inventory-postgres` | 5435           | 5432           | `inventory_db` |
+| 4   | `payments-postgres`  | 5436           | 5432           | `payments_db`  |
 
 Esta configuración prioriza el aprendizaje y hace visible el aislamiento:
 
@@ -224,10 +224,10 @@ Resultado incorrecto: se pierde COMPLETED
 
 El timeout de Saga combina dos protecciones:
 
-| Mecanismo | Protección |
-|---|---|
+| Mecanismo                | Protección                                                                                   |
+|--------------------------|----------------------------------------------------------------------------------------------|
 | `FOR UPDATE SKIP LOCKED` | Evita que dos instancias del scheduler seleccionen y procesen la misma Saga al mismo tiempo. |
-| `@Version` | Detecta que otro flujo, como un consumidor Kafka, modificó la Saga concurrentemente. |
+| `@Version`               | Detecta que otro flujo, como un consumidor Kafka, modificó la Saga concurrentemente.         |
 
 Inventory también contiene una columna `version`. Sus sentencias SQL atómicas de reserva y liberación incrementan explícitamente el valor porque son consultas nativas y no una actualización administrada directamente por Hibernate:
 
@@ -278,13 +278,13 @@ Contenedor eliminado + volumen eliminado   → datos eliminados
 
 ## Resumen de la decisión
 
-| Decisión | Motivo |
-|-------------------------------------|------------------------------------------------------------------|
-| Una base propiedad de cada servicio | Autonomía y bajo acoplamiento                                    |
-| Cuatro PostgreSQL en local          | Hacer explícito el aislamiento durante el aprendizaje            |
-| PostgreSQL                          | Integridad, transacciones, SQL amplio e integración con el stack |
-| Flyway                              | Versionar y ejecutar cambios del esquema                         |
-| Hibernate `validate`                | Detectar diferencias sin modificar las tablas                    |
-| Volúmenes Docker                    | Conservar los datos aunque se recreen los contenedores           |
+| #   | Decisión                            | Motivo                                                           |
+|-----|-------------------------------------|------------------------------------------------------------------|
+| 1   | Una base propiedad de cada servicio | Autonomía y bajo acoplamiento                                    |
+| 2   | Cuatro PostgreSQL en local          | Hacer explícito el aislamiento durante el aprendizaje            |
+| 3   | PostgreSQL                          | Integridad, transacciones, SQL amplio e integración con el stack |
+| 4   | Flyway                              | Versionar y ejecutar cambios del esquema                         |
+| 5   | Hibernate `validate`                | Detectar diferencias sin modificar las tablas                    |
+| 6   | Volúmenes Docker                    | Conservar los datos aunque se recreen los contenedores           |
 
 En producción, la separación puede implementarse con instancias independientes o con un clúster compartido y bases/usuarios separados, según carga, criticidad, seguridad, experiencia del equipo y presupuesto.

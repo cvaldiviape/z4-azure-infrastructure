@@ -14,12 +14,12 @@ Para seguir una compra de forma más visual, abre **Dashboards > Z4 Event Commer
 
 ## Etiquetas disponibles
 
-| Etiqueta         | Ejemplo                                       | Finalidad                        |
-|------------------|-----------------------------------------------|----------------------------------|
-| `environment`    | `local`                                       | Entorno donde se originó el log. |
-| `service_name`.  | `order-service`                               | Backend que generó el log.       |
-| `filename`       | `/var/log/z4/order-service/order-service.log` | Archivo leído por Alloy.         |
-| `detected_level` | `info`, `warning`, `error`                    | Nivel detectado por Loki.        |
+| #   | Etiqueta         | Ejemplo                                       | Finalidad                        |
+|-----|------------------|-----------------------------------------------|----------------------------------|
+| 1   | `environment`    | `local`                                       | Entorno donde se originó el log. |
+| 2   | `service_name`.  | `order-service`                               | Backend que generó el log.       |
+| 3   | `filename`       | `/var/log/z4/order-service/order-service.log` | Archivo leído por Alloy.         |
+| 4   | `detected_level` | `info`, `warning`, `error`                    | Nivel detectado por Loki.        |
 
 ## Consultas por backend
 
@@ -101,12 +101,12 @@ Errores de Order Service:
 
 ## Operadores para filtrar contenido
 
-| Operador         | Función                                                   |
-|------------------|-----------------------------------------------------------|
-| `|= "texto"`     | Incluye entradas que contienen el texto exacto.           |
-| `!= "texto"`     | Excluye entradas que contienen el texto exacto.           |
-| `|~ "expresión"` | Incluye entradas que coinciden con una expresión regular. |
-| `!~ "expresión"` | Excluye entradas que coinciden con una expresión regular. |
+| #   | Operador         | Función                                                   |
+|-----|------------------|-----------------------------------------------------------|
+| 1   | `|= "texto"`     | Incluye entradas que contienen el texto exacto.           |
+| 2   | `!= "texto"`     | Excluye entradas que contienen el texto exacto.           |
+| 3   | `|~ "expresión"` | Incluye entradas que coinciden con una expresión regular. |
+| 4   | `!~ "expresión"` | Excluye entradas que coinciden con una expresión regular. |
 
 Buscar una excepción específica:
 
@@ -198,16 +198,16 @@ Busca el `correlationId` devuelto por Order Service:
 
 El resultado permite ordenar cronológicamente las acciones de Order, Inventory y Payment Service. Las acciones principales son:
 
-| Acción | Significado |
-|---|---|
-| `action=event_received` | Un servicio recibió el mensaje desde Kafka. |
-| `action=event_published` | Kafka confirmó la publicación e informó partición y offset. |
-| `action=event_processed` | El consumidor terminó de procesar y registrar el evento. |
-| `action=event_ignored` | El mensaje era duplicado, no compatible o ya existía el resultado. |
-| `action=payment_approved` | El pago fue aprobado. |
-| `action=payment_rejected` | El pago fue rechazado de forma controlada e incluye `reason`. |
-| `action=event_processing_failed` | Ocurrió una excepción inesperada e incluye su stack trace. |
-| `action=event_publish_failed` | Kafka no confirmó la publicación del evento. |
+| #   | Acción                           | Significado                                                        |
+|-----|----------------------------------|--------------------------------------------------------------------|
+| 1   | `action=event_received`          | Un servicio recibió el mensaje desde Kafka.                        |
+| 2   | `action=event_published`         | Kafka confirmó la publicación e informó partición y offset.        |
+| 3   | `action=event_processed`         | El consumidor terminó de procesar y registrar el evento.           |
+| 4   | `action=event_ignored`           | El mensaje era duplicado, no compatible o ya existía el resultado. |
+| 5   | `action=payment_approved`        | El pago fue aprobado.                                              |
+| 6   | `action=payment_rejected`        | El pago fue rechazado de forma controlada e incluye `reason`.      |
+| 7   | `action=event_processing_failed` | Ocurrió una excepción inesperada e incluye su stack trace.         |
+| 8   | `action=event_publish_failed`    | Kafka no confirmó la publicación del evento.                       |
 
 Mostrar solamente publicaciones y recepciones de una compra:
 

@@ -23,12 +23,12 @@ El backend y pgAdmin utilizan direcciones diferentes porque se ejecutan en lugar
 
 Ambos llegan a la misma base y observan los mismos registros.
 
-| Backend   | Conexión desde Mac | Conexión desde pgAdmin | Base de datos  |
-|-----------|--------------------|------------------------|----------------|
-| Auth | `localhost:5433` | `auth-postgres:5432` | `auth_db` |
-| Order | `localhost:5434` | `orders-postgres:5432` | `orders_db` |
-| Inventory | `localhost:5435` | `inventory-postgres:5432` | `inventory_db` |
-| Payment | `localhost:5436` | `payments-postgres:5432` | `payments_db` |
+| #   | Backend   | Conexión desde Mac | Conexión desde pgAdmin    | Base de datos  |
+|-----|-----------|--------------------|---------------------------|----------------|
+| 1   | Auth      | `localhost:5433`   | `auth-postgres:5432`      | `auth_db`      |
+| 2   | Order     | `localhost:5434`   | `orders-postgres:5432`    | `orders_db`    |
+| 3   | Inventory | `localhost:5435`   | `inventory-postgres:5432` | `inventory_db` |
+| 4   | Payment   | `localhost:5436`   | `payments-postgres:5432`  | `payments_db`  |
 
 ## Responsabilidad de cada archivo
 
@@ -54,17 +54,17 @@ pgadmin:
     - ./pgadmin/pgpass:/pgadmin4/pgpass:ro
 ```
 
-| Campo   | Finalidad                                                                                                    |
-|---------|--------------------------------------------------------------------------------------------------------------|
-| `image` | Define la versión de pgAdmin ejecutada por Docker.                                                           |
-| `ports` | Publica el puerto `80` del contenedor como `localhost:5050` en el Mac.                                       |
-| `PGADMIN_DEFAULT_EMAIL` | Crea el usuario utilizado para iniciar sesión en la interfaz.                                |
-| `PGADMIN_DEFAULT_PASSWORD` | Define la contraseña de acceso a la interfaz.                                             |
-| `PGADMIN_REPLACE_SERVERS_ON_STARTUP` | Vuelve a importar las conexiones de `servers.json` cada vez que inicia pgAdmin. |
-| `PGPASS_FILE` | Indica dentro del contenedor dónde debe buscar las contraseñas PostgreSQL.                             |
-| `pgadmin_data` | Conserva usuarios y preferencias de pgAdmin entre reinicios.                                          |
-| `servers.json` | Monta el catálogo de conexiones dentro del contenedor.                                                |
-| `pgpass` | Monta las contraseñas de las conexiones dentro del contenedor.                                              |
+| #   | Campo                                | Finalidad                                                                       |
+|-----|--------------------------------------|---------------------------------------------------------------------------------|
+| 1   | `image`                              | Define la versión de pgAdmin ejecutada por Docker.                              |
+| 2   | `ports`                              | Publica el puerto `80` del contenedor como `localhost:5050` en el Mac.          |
+| 3   | `PGADMIN_DEFAULT_EMAIL`              | Crea el usuario utilizado para iniciar sesión en la interfaz.                   |
+| 4   | `PGADMIN_DEFAULT_PASSWORD`           | Define la contraseña de acceso a la interfaz.                                   |
+| 5   | `PGADMIN_REPLACE_SERVERS_ON_STARTUP` | Vuelve a importar las conexiones de `servers.json` cada vez que inicia pgAdmin. |
+| 6   | `PGPASS_FILE`                        | Indica dentro del contenedor dónde debe buscar las contraseñas PostgreSQL.      |
+| 7   | `pgadmin_data`                       | Conserva usuarios y preferencias de pgAdmin entre reinicios.                    |
+| 8   | `servers.json`                       | Monta el catálogo de conexiones dentro del contenedor.                          |
+| 9   | `pgpass`                             | Monta las contraseñas de las conexiones dentro del contenedor.                  |
 
 **Usado por:** Docker Compose para crear y configurar el contenedor.
 
@@ -92,17 +92,17 @@ pgadmin:
 }
 ```
 
-| Campo | Finalidad |
-|------------------|------------------------------------------------------------------------|
-| `Servers` | Agrupa todas las conexiones que se importarán. |
-| `"1"`  | Identificador único de la conexión dentro del archivo. |
-| `Name` | Nombre mostrado en el panel de pgAdmin. |
-| `Group` | Carpeta visual que agrupa las conexiones del proyecto. |
-| `Host` | Nombre del servicio PostgreSQL dentro de la red de Docker. |
-| `Port` | Puerto interno en el que escucha PostgreSQL. |
-| `MaintenanceDB` | Base a la que pgAdmin se conecta inicialmente. |
-| `Username` | Usuario PostgreSQL con el que se realizará la conexión. |
-| `SSLMode` | Política SSL de la conexión; `prefer` intenta usar SSL cuando está disponible. |
+| #   | Campo           | Finalidad                                                                      |
+|-----|-----------------|--------------------------------------------------------------------------------|
+| 1   | `Servers`       | Agrupa todas las conexiones que se importarán.                                 |
+| 2   | `"1"`           | Identificador único de la conexión dentro del archivo.                         |
+| 3   | `Name`          | Nombre mostrado en el panel de pgAdmin.                                        |
+| 4   | `Group`         | Carpeta visual que agrupa las conexiones del proyecto.                         |
+| 5   | `Host`          | Nombre del servicio PostgreSQL dentro de la red de Docker.                     |
+| 6   | `Port`          | Puerto interno en el que escucha PostgreSQL.                                   |
+| 7   | `MaintenanceDB` | Base a la que pgAdmin se conecta inicialmente.                                 |
+| 8   | `Username`      | Usuario PostgreSQL con el que se realizará la conexión.                        |
+| 9   | `SSLMode`       | Política SSL de la conexión; `prefer` intenta usar SSL cuando está disponible. |
 
 **Usado por:** pgAdmin durante su inicialización.
 
@@ -127,13 +127,13 @@ inventory-postgres:5432:inventory_db:ecommerce:ecommerce
 payments-postgres:5432:payments_db:ecommerce:ecommerce
 ```
 
-|   | Campo      | Ejemplo           | Finalidad                                     |
-|---:|-----------|-------------------|-----------------------------------------------|
-| 1 | Host       | `orders-postgres` | Identifica el servicio PostgreSQL de Docker.  |
-| 2 | Puerto     | `5432`            | Identifica el puerto interno de PostgreSQL.   |
-| 3 | Base       | `orders_db`       | Indica para qué base es válida la credencial. |
-| 4 | Usuario    | `ecommerce`       | Indica qué usuario utilizará la contraseña.   |
-| 5 | Contraseña | `ecommerce`       | Valor utilizado para autenticar al usuario.   |
+|     | Campo      | Ejemplo           | Finalidad                                     |
+|-----|------------|-------------------|-----------------------------------------------|
+| 1   | Host       | `orders-postgres` | Identifica el servicio PostgreSQL de Docker.  |
+| 2   | Puerto     | `5432`            | Identifica el puerto interno de PostgreSQL.   |
+| 3   | Base       | `orders_db`       | Indica para qué base es válida la credencial. |
+| 4   | Usuario    | `ecommerce`       | Indica qué usuario utilizará la contraseña.   |
+| 5   | Contraseña | `ecommerce`       | Valor utilizado para autenticar al usuario.   |
 
 **Usado por:** pgAdmin cuando abre una conexión PostgreSQL.
 
@@ -161,13 +161,13 @@ La expresión `${VARIABLE:valor_predeterminado}` usa la variable de entorno cuan
 
 ### Resumen
 
-| Archivo o configuración               | Contiene                                      | Usado por                  | Finalidad                                        |
-|---------------------------------------|-----------------------------------------------|----------------------------|--------------------------------------------------|
-| `docker-compose.yml`                  | Contenedores, puertos, variables y volúmenes  | Docker Compose             | Crear toda la infraestructura local              |
-| `servers.json`                        | Host, puerto, base y usuario de cada conexión | pgAdmin                    | Registrar las conexiones automáticamente         |
-| `pgpass`                              | Contraseña asociada a cada conexión | pgAdmin | Autenticarse en PostgreSQL |
-| `application-local.yml`               | URL y credenciales de un backend              | Aplicación Spring Boot     | Conectar el backend a PostgreSQL                 |
-| `POSTGRES_USER` y `POSTGRES_PASSWORD` | Usuario inicial de una base                   | Imagen PostgreSQL          | Crear el usuario cuando se inicializa el volumen |
+| #   | Archivo o configuración       | Contiene                         | Usado por         | Finalidad                           |
+|-----|-------------------------------|----------------------------------|-------------------|-------------------------------------|
+| 1   | `docker-compose.yml`          | Contenedores, puertos, volúmenes | Docker Compose    | Crear la infraestructura local      |
+| 2   | `servers.json`                | Host, puerto, base y usuario     | pgAdmin           | Registrar las conexiones            |
+| 3   | `pgpass`                      | Contraseña de cada conexión      | pgAdmin           | Autenticarse en PostgreSQL          |
+| 4   | `application-local.yml`       | URL y credenciales del backend   | Spring Boot       | Conectar el backend a PostgreSQL    |
+| 5   | `POSTGRES_USER` / `_PASSWORD` | Usuario inicial de la base       | Imagen PostgreSQL | Crear usuario al iniciar el volumen |
 
 pgAdmin combina la información de ambos archivos:
 

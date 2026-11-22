@@ -4,13 +4,13 @@ Proyecto educativo con cuatro microservicios Spring Boot 4, Java 21, PostgreSQL 
 
 ## Documentación de servicios
 
-| Componente | Documentación |
-|---|---|
-| Infraestructura local | [docs/01-infrastructure-local.md](docs/01-infrastructure-local.md) |
-| Autenticación | [backend/auth-service/README.md](../backend/auth-service/README.md) |
-| Pedidos y Saga de compra | [backend/order-service/README.md](../backend/order-service/README.md) |
-| Inventario | [backend/inventory-service/README.md](../backend/inventory-service/README.md) |
-| Pagos | [backend/payment-service/README.md](../backend/payment-service/README.md) |
+| #   | Componente               | Documentación                                                                 |
+|-----|--------------------------|-------------------------------------------------------------------------------|
+| 1   | Infraestructura local    | [docs/01-infrastructure-local.md](docs/01-infrastructure-local.md)            |
+| 2   | Autenticación            | [backend/auth-service/README.md](../backend/auth-service/README.md)           |
+| 3   | Pedidos y Saga de compra | [backend/order-service/README.md](../backend/order-service/README.md)         |
+| 4   | Inventario               | [backend/inventory-service/README.md](../backend/inventory-service/README.md) |
+| 5   | Pagos                    | [backend/payment-service/README.md](../backend/payment-service/README.md)     |
 
 ## Guías centrales
 
@@ -20,32 +20,33 @@ Toda la documentación de infraestructura está centralizada en [`docs`](docs):
 
 Orden de lectura recomendado para entender el procesamiento distribuido:
 
-| Orden | Guía | Contenido |
-|---:|---|---|
-| 05 | [Fundamentos de Kafka](docs/05-kafka-fundamentals.md) | Brokers, topics, particiones, offsets y consumer groups. |
-| 07 | [Reintentos y DLT](docs/07-kafka-retries-dlt.md) | Clasificación de errores, reintentos y mensajes fallidos. |
-| 08 | [Saga de compra](docs/08-saga-pattern.md) | Orquestación, estados, compensaciones y timeout. |
-| 09 | [Transactional Inbox y Outbox](docs/09-transactional-inbox-outbox.md) | Consistencia, idempotencia y publicación confiable. |
-| 12 | [Reconciliación de Sagas](docs/12-saga-reconciliation.md) | Diagnóstico por lotes previo al replay. |
-| 13 | [Convención de nombres para topics](docs/13-kafka-topic-naming.md) | Topics orientados a capacidades, solicitudes, resultados y eventos públicos. |
-| 14 | [Particiones, consumers y consumer groups](docs/14-kafka-partitions-consumer-groups.md) | Quién decide qué, para qué sirve el `group-id`, instancias frente a consumers y cómo elegir particiones. |
+| Orden | Guía                                 | Contenido                                                           |
+|-------|--------------------------------------|---------------------------------------------------------------------|
+| 05    | [Fundamentos de Kafka][d05]          | Brokers, topics, particiones, offsets y consumer groups.            |
+| 07    | [Reintentos y DLT][d07]              | Clasificación de errores, reintentos y mensajes fallidos.           |
+| 08    | [Saga de compra][d08]                | Orquestación, estados, compensaciones y timeout.                    |
+| 09    | [Transactional Inbox y Outbox][d09]  | Consistencia, idempotencia y publicación confiable.                 |
+| 12    | [Reconciliación de Sagas][d12]       | Diagnóstico por lotes previo al replay.                             |
+| 13    | [Nombres de topics][d13]             | Topics por capacidad: solicitudes, resultados y eventos públicos.   |
+| 14    | [Particiones y consumer groups][d14] | Quién decide qué, `group-id`, instancias y cómo elegir particiones. |
+| 15    | [Estado de confiabilidad][d15]       | Qué está aplicado, qué resuelve cada mecanismo y qué falta.         |
 
 ### Infraestructura y datos
 
-| Guía | Contenido |
-|---|---|
-| [01 · Infraestructura local](docs/01-infrastructure-local.md) | Componentes, puertos, ejecución y credenciales locales. |
-| [02 · Volúmenes y persistencia](docs/02-docker-volumes.md) | Volúmenes administrados, bind mounts y conservación de datos. |
-| [03 · Estrategia de bases de datos](docs/03-database-strategy.md) | Database per service, Flyway, concurrencia y aislamiento. |
-| [04 · pgAdmin](docs/04-pgadmin.md) | Conexiones locales y archivos de configuración. |
-| [06 · Kafbat UI](docs/06-kafbat-ui-guide.md) | Inspección de mensajes, consumidores, offsets y lag. |
+| Guía                                     | Contenido                                                     |
+|------------------------------------------|---------------------------------------------------------------|
+| [01 · Infraestructura local][d01]        | Componentes, puertos, ejecución y credenciales locales.       |
+| [02 · Volúmenes y persistencia][d02]     | Volúmenes administrados, bind mounts y conservación de datos. |
+| [03 · Estrategia de bases de datos][d03] | Database per service, Flyway, concurrencia y aislamiento.     |
+| [04 · pgAdmin][d04]                      | Conexiones locales y archivos de configuración.               |
+| [06 · Kafbat UI][d06]                    | Inspección de mensajes, consumidores, offsets y lag.          |
 
 ### Observabilidad
 
-| Guía | Contenido |
-|---|---|
-| [10 · Logs con Alloy, Loki y Grafana](docs/10-observability.md) | Arquitectura y configuración de la plataforma de logs. |
-| [11 · Consultas LogQL](docs/11-grafana-logql-queries.md) | Búsquedas y filtros prácticos para Grafana. |
+| Guía                                       | Contenido                                              |
+|--------------------------------------------|--------------------------------------------------------|
+| [10 · Logs con Alloy, Loki y Grafana][d10] | Arquitectura y configuración de la plataforma de logs. |
+| [11 · Consultas LogQL][d11]                | Búsquedas y filtros prácticos para Grafana.            |
 
 Este README funciona como portada e índice. Cada guía documenta una responsabilidad concreta. Cuando cambie un puerto, topic, consumer group, variable o decisión operativa, se debe actualizar la guía correspondiente en el mismo commit.
 
@@ -93,14 +94,14 @@ docker compose -f infra/docker/docker-compose.yml ps
 
 La infraestructura queda disponible en:
 
-| Componente           | Dirección local                                |
-|----------------------|------------------------------------------------|
-| Kafka                | `localhost:9092`                               |
-| Auth PostgreSQL      | `localhost:5433/auth_db`                       |
-| Orders PostgreSQL    | `localhost:5434/orders_db`                     |
-| Inventory PostgreSQL | `localhost:5435/inventory_db`                  |
-| Payments PostgreSQL  | `localhost:5436/payments_db`                   |
-| pgAdmin              | [http://localhost:5050](http://localhost:5050) |
+| #   | Componente           | Dirección local                                |
+|-----|----------------------|------------------------------------------------|
+| 1   | Kafka                | `localhost:9092`                               |
+| 2   | Auth PostgreSQL      | `localhost:5433/auth_db`                       |
+| 3   | Orders PostgreSQL    | `localhost:5434/orders_db`                     |
+| 4   | Inventory PostgreSQL | `localhost:5435/inventory_db`                  |
+| 5   | Payments PostgreSQL  | `localhost:5436/payments_db`                   |
+| 6   | pgAdmin              | [http://localhost:5050](http://localhost:5050) |
 
 Los datos se conservan en volúmenes de Docker al ejecutar `docker compose -f infra/docker/docker-compose.yml down`.
 
@@ -108,12 +109,12 @@ Los datos se conservan en volúmenes de Docker al ejecutar `docker compose -f in
 
 Abre cada repositorio Maven como módulo y configura JDK 21 como Project SDK y Maven Runner JDK. Ejecuta en modo **Debug** las siguientes clases:
 
-| Aplicación | Puerto |
-|---|---:|
-| `AuthServiceApplication` | 8081 |
-| `OrderServiceApplication` | 8082 |
-| `InventoryServiceApplication` | 8083 |
-| `PaymentServiceApplication` | 8084 |
+| #   | Aplicación                    | Puerto |
+|-----|-------------------------------|--------|
+| 1   | `AuthServiceApplication`      | 8081   |
+| 2   | `OrderServiceApplication`     | 8082   |
+| 3   | `InventoryServiceApplication` | 8083   |
+| 4   | `PaymentServiceApplication`   | 8084   |
 
 Breakpoints recomendados para seguir la Saga:
 
@@ -187,3 +188,19 @@ docker compose -f infra/docker/docker-compose.yml down
 No agregues `-v` al comando anterior si deseas conservar los datos.
 
 > El secreto JWT y las credenciales predeterminadas son exclusivamente para desarrollo local.
+
+[d01]: docs/01-infrastructure-local.md
+[d02]: docs/02-docker-volumes.md
+[d03]: docs/03-database-strategy.md
+[d04]: docs/04-pgadmin.md
+[d05]: docs/05-kafka-fundamentals.md
+[d06]: docs/06-kafbat-ui-guide.md
+[d07]: docs/07-kafka-retries-dlt.md
+[d08]: docs/08-saga-pattern.md
+[d09]: docs/09-transactional-inbox-outbox.md
+[d10]: docs/10-observability.md
+[d11]: docs/11-grafana-logql-queries.md
+[d12]: docs/12-saga-reconciliation.md
+[d13]: docs/13-kafka-topic-naming.md
+[d14]: docs/14-kafka-partitions-consumer-groups.md
+[d15]: docs/15-reliability-status.md

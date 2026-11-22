@@ -12,26 +12,28 @@ Esta guía amplía la [guía 05](05-kafka-fundamentals.md) con las preguntas que
 
 ## Analogía: oficina de correos
 
-| Kafka               | Oficina de correos                                                     |
-|---------------------|------------------------------------------------------------------------|
-| Topic               | Un mueble de casilleros con nombre, por ejemplo «pagos».               |
-| Partición           | Cada casillero del mueble: 0, 1, 2…                                    |
-| Offset              | La posición de una carta dentro de su casillero.                       |
-| Producer            | El cartero: deja cada carta en un casillero según el número de pedido. |
-| Consumer            | Un empleado que recoge cartas.                                         |
-| Consumer group      | Un equipo de empleados con nombre; se reparten los casilleros.         |
-| Offset confirmado   | El marcapáginas del equipo: «llegamos hasta la carta 57».              |
-| Kafka (coordinador) | El jefe que asigna a cada empleado sus casilleros.                     |
+| #   | Kafka               | Oficina de correos                                                     |
+|-----|---------------------|------------------------------------------------------------------------|
+| 1   | Topic               | Un mueble de casilleros con nombre, por ejemplo «pagos».               |
+| 2   | Partición           | Cada casillero del mueble: 0, 1, 2…                                    |
+| 3   | Offset              | La posición de una carta dentro de su casillero.                       |
+| 4   | Producer            | El cartero: deja cada carta en un casillero según el número de pedido. |
+| 5   | Consumer            | Un empleado que recoge cartas.                                         |
+| 6   | Consumer group      | Un equipo de empleados con nombre; se reparten los casilleros.         |
+| 7   | Offset confirmado   | El marcapáginas del equipo: «llegamos hasta la carta 57».              |
+| 8   | Kafka (coordinador) | El jefe que asigna a cada empleado sus casilleros.                     |
 
 ## Qué es cada cosa a nivel de sistema
 
 En local solo corren tres tipos de proceso:
 
-| Proceso | Dónde corre | Qué hace |
-|----------------------------------------------|-------------------------------------------------------|--------------------------------------------------------------------|
-| Broker Kafka                                 | Contenedor Docker `apache/kafka:4.0.0`, puerto `9092` | Guarda las particiones en disco, coordina grupos y guarda offsets. |
-| Servicios Spring (Order, Inventory, Payment) | JVM en IntelliJ                                       | `KafkaTemplate` es el producer y `@KafkaListener` es el consumer.  |
-| Kafbat UI                                    | Contenedor Docker, puerto `8090`                      | Solo inspecciona; no participa en el flujo.                        |
+| #   | Proceso                   | Dónde corre           | Qué hace                                          |
+|-----|---------------------------|-----------------------|---------------------------------------------------|
+| 1   | Broker Kafka              | Docker, puerto `9092` | Guarda particiones, coordina grupos y offsets     |
+| 2   | Order, Inventory, Payment | JVM en IntelliJ       | `KafkaTemplate` produce, `@KafkaListener` consume |
+| 3   | Kafbat UI                 | Docker, puerto `8090` | Solo inspecciona; no participa en el flujo        |
+
+El broker usa la imagen `apache/kafka:4.0.0`.
 
 El producer y el consumer **no son programas aparte**: son objetos dentro de tus servicios que se conectan por TCP al broker. Los servicios nunca se hablan entre sí; todo pasa por el broker.
 
@@ -59,12 +61,17 @@ Verás carpetas como `payment-processing-results-topic-0` (topic + número de pa
 
 ## Quién decide qué
 
-| Decisión | Quién la toma | Cuándo | En el proyecto |
-|---|---|---|---|
-| Cuántas particiones tiene un topic | Quien crea el topic: `TopicBuilder`, el CLI `kafka-topics` o el broker por defecto (`num.partitions`) | Una vez | Los DLT usan `TopicBuilder…partitions(1)` en `KafkaConsumerRetryConfig`. Los topics principales no se declaran en el código, así que el broker los crea con su valor por defecto. |
-| En qué partición cae cada mensaje | El producer: `hash(key) % particiones` | En cada envío | Los producers publican con `event_key` = id del pedido. |
-| A qué grupo pertenece un consumer | El consumer, por configuración | Al arrancar | `spring.kafka.consumer.group-id` en cada `application.yml`. |
-| Qué consumer lee cada partición | Kafka (coordinador del grupo) | En cada rebalance | Automático. |
+| #   | Decisión                           | Quién la toma           | Cuándo            | En el proyecto                    |
+|-----|------------------------------------|-------------------------|-------------------|-----------------------------------|
+| 1   | Cuántas particiones tiene un topic | Quien crea el topic     | Una vez           | `TopicBuilder` o valor del broker |
+| 2   | En qué partición cae cada mensaje  | El producer, por la key | En cada envío     | `event_key` = id del pedido       |
+| 3   | A qué grupo pertenece un consumer  | El consumer             | Al arrancar       | `group-id` en `application.yml`   |
+| 4   | Qué consumer lee cada partición    | Kafka (coordinador)     | En cada rebalance | Automático                        |
+
+Detalles:
+
+- **Particiones**: se fijan con `TopicBuilder`, con el CLI `kafka-topics` o, si nadie las declara, con el valor por defecto del broker (`num.partitions`). En el proyecto, los DLT usan `TopicBuilder…partitions(1)` en `KafkaConsumerRetryConfig`; los topics principales no se declaran en el código y el broker los crea con su valor por defecto.
+- **Partición de cada mensaje**: el producer calcula `hash(key) % particiones`.
 
 Cada rol toma una sola decisión: el producer no sabe quién leerá, el consumer no elige particiones y Kafka no decide cuántas particiones hay.
 
@@ -97,11 +104,11 @@ No. Una partición es un **carril de almacenamiento**. Lo que corre en paralelo 
 4. **Demasiadas también cuesta**: más archivos en el broker y rebalances más lentos.
 5. **Orden global**: si necesitas orden de todo el topic, solo puede haber una partición. Si basta el orden por entidad, como aquí, puedes tener muchas.
 
-| Situación | Particiones típicas |
-|---|---|
-| Local o educativo | 1–3 |
-| Producción con carga moderada | 6–12 |
-| Alto volumen | Según el cálculo de throughput, con margen |
+| #   | Situación                     | Particiones típicas                        |
+|-----|-------------------------------|--------------------------------------------|
+| 1   | Local o educativo             | 1–3                                        |
+| 2   | Producción con carga moderada | 6–12                                       |
+| 3   | Alto volumen                  | Según el cálculo de throughput, con margen |
 
 Se suelen elegir números con muchos divisores (6, 12, 24) para repartir parejo entre 1, 2, 3, 4 o 6 consumers.
 
@@ -120,11 +127,11 @@ spring:
       key-serializer: ...                          # el producer no tiene group-id
 ```
 
-| Servicio | group-id |
-|---|---|
-| order-service | `purchase-saga-consumer-group-id` |
-| inventory-service | `inventory-request-consumer-group-id` |
-| payment-service | `payment-request-consumer-group-id` |
+| #   | Servicio          | group-id                              |
+|-----|-------------------|---------------------------------------|
+| 1   | order-service     | `purchase-saga-consumer-group-id`     |
+| 2   | inventory-service | `inventory-request-consumer-group-id` |
+| 3   | payment-service   | `payment-request-consumer-group-id`   |
 
 Los `@KafkaListener` del proyecto solo indican el topic. Spring les asigna el `group-id` del `application.yml`, así que los dos listeners de order-service pertenecen al mismo grupo. Se podría sobrescribir con `@KafkaListener(topics = "...", groupId = "otro")`, pero el proyecto no lo hace.
 
@@ -148,10 +155,12 @@ La frase correcta es «cada **mensaje** lo recibe un solo consumer del grupo», 
 
 ### Mismo grupo o grupos distintos
 
-| Caso | group-id | Resultado |
-|---|---|---|
-| Instancias del mismo servicio | El mismo | Se reparten las particiones y cada mensaje se procesa una vez. |
-| Servicios distintos (Order y un futuro servicio de notificaciones) | Distinto | Cada servicio recibe **todos** los mensajes con su propio offset. |
+| Caso                          | group-id | Resultado                                                    |
+|-------------------------------|----------|--------------------------------------------------------------|
+| Instancias del mismo servicio | El mismo | Se reparten las particiones; cada mensaje se procesa una vez |
+| Servicios distintos           | Distinto | Cada servicio recibe **todos** los mensajes con su offset    |
+
+Ejemplo de servicios distintos: Order y un futuro servicio de notificaciones.
 
 ### Errores típicos
 
@@ -160,11 +169,11 @@ La frase correcta es «cada **mensaje** lo recibe un solo consumer del grupo», 
 
 ## Instancias frente a consumers
 
-| Término | Qué es |
-|---|---|
-| Instancia | Un proceso Java del servicio: un `java -jar`, un pod o una sesión Debug de IntelliJ. |
-| Consumer | Un cliente Kafka dentro de esa instancia. Una instancia puede tener varios según `concurrency`. |
-| Consumer group | Todos los consumers, de todas las instancias, que comparten `group-id`. |
+| #   | Término        | Qué es                                                                      |
+|-----|----------------|-----------------------------------------------------------------------------|
+| 1   | Instancia      | Un proceso Java: un `java -jar`, un pod o una sesión Debug de IntelliJ      |
+| 2   | Consumer       | Un cliente Kafka dentro de la instancia; puede haber varios (`concurrency`) |
+| 3   | Consumer group | Todos los consumers, de todas las instancias, con el mismo `group-id`       |
 
 ```text
 total consumers del grupo = instancias × concurrency

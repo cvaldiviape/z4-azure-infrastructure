@@ -94,20 +94,20 @@ En la implementación inicial de Inventory, este componente es un scheduler que 
 
 La tabla `outbox_events` conserva la información necesaria para publicar posteriormente:
 
-| Campo            | Finalidad                                              |
-|------------------|--------------------------------------------------------|
-| `event_id`       | Identificador estable del evento.                      |
-| `aggregate_id`   | Pedido o agregado relacionado.                         |
-| `correlation_id` | Identificador para seguir la Saga completa.            |
-| `event_type`     | Por ejemplo, `STOCK_RESERVED`.                         |
-| `topic`          | Topic Kafka de destino.                                |
-| `event_key`      | Key utilizada para conservar el orden por pedido.      |
-| `payload`        | Evento serializado que se publicará sin reconstruirlo. |
-| `status`         | `PENDING` o `PUBLISHED`.                               |
-| `attempts`       | Cantidad de publicaciones fallidas.                    |
-| `last_error`     | Último error de publicación.                           |
-| `created_at`     | Momento en que nació el evento.                        |
-| `published_at`   | Momento en que Kafka confirmó la publicación.          |
+| #   | Campo            | Finalidad                                              |
+|-----|------------------|--------------------------------------------------------|
+| 1   | `event_id`       | Identificador estable del evento.                      |
+| 2   | `aggregate_id`   | Pedido o agregado relacionado.                         |
+| 3   | `correlation_id` | Identificador para seguir la Saga completa.            |
+| 4   | `event_type`     | Por ejemplo, `STOCK_RESERVED`.                         |
+| 5   | `topic`          | Topic Kafka de destino.                                |
+| 6   | `event_key`      | Key utilizada para conservar el orden por pedido.      |
+| 7   | `payload`        | Evento serializado que se publicará sin reconstruirlo. |
+| 8   | `status`         | `PENDING` o `PUBLISHED`.                               |
+| 9   | `attempts`       | Cantidad de publicaciones fallidas.                    |
+| 10  | `last_error`     | Último error de publicación.                           |
+| 11  | `created_at`     | Momento en que nació el evento.                        |
+| 12  | `published_at`   | Momento en que Kafka confirmó la publicación.          |
 
 ## Inbox
 
@@ -156,11 +156,11 @@ Si la transacción falla, tampoco se registra el Inbox. Kafka puede entregar nue
 
 ### Tabla Inbox del proyecto
 
-| Campo          | Finalidad                                                      |
-|----------------|----------------------------------------------------------------|
-| `event_id`     | Clave primaria que impide registrar dos veces el mismo evento. |
-| `event_type`   | Tipo del evento consumido.                                     |
-| `processed_at` | Momento en que terminó el procesamiento local.                 |
+| #   | Campo          | Finalidad                                                      |
+|-----|----------------|----------------------------------------------------------------|
+| 1   | `event_id`     | Clave primaria que impide registrar dos veces el mismo evento. |
+| 2   | `event_type`   | Tipo del evento consumido.                                     |
+| 3   | `processed_at` | Momento en que terminó el procesamiento local.                 |
 
 El nombre `processed_events` también habría sido válido, pero `inbox_events` hace explícito el patrón arquitectónico utilizado.
 
@@ -178,10 +178,10 @@ Outbox
 Kafka
 ```
 
-| Patrón | Protege | Pregunta que responde |
-|---|---|---|
-| Inbox | Entrada del servicio | ¿Ya procesé este `eventId`? |
-| Outbox | Salida del servicio | ¿Quedó registrada la intención de publicar este evento? |
+| Patrón | Protege              | Pregunta que responde                                   |
+|--------|----------------------|---------------------------------------------------------|
+| Inbox  | Entrada del servicio | ¿Ya procesé este `eventId`?                             |
+| Outbox | Salida del servicio  | ¿Quedó registrada la intención de publicar este evento? |
 
 Utilizar Outbox sin Inbox puede producir efectos duplicados. Utilizar Inbox sin Outbox evita repetir entradas, pero no evita perder eventos salientes.
 
@@ -201,13 +201,13 @@ Puede existir una caída después del ACK de Kafka y antes de actualizar `PUBLIS
 
 ## Diferencia frente a reintentos y DLT
 
-| Mecanismo                 | Problema que resuelve                                                             |
-|---------------------------|-----------------------------------------------------------------------------------|
-| Outbox                    | Evita perder un evento saliente cuando existe un cambio confirmado en PostgreSQL. |
-| Inbox                     | Evita repetir efectos cuando llega un evento duplicado.                           |
-| Reintentos del consumidor | Vuelven a ejecutar temporalmente un mensaje que falló al ser consumido.           |
-| DLT                       | Aísla mensajes que no pudieron procesarse para investigarlos o reprocesarlos.     |
-| Saga                      | Coordina el proceso de negocio entre varios servicios y sus compensaciones.       |
+| #   | Mecanismo                 | Problema que resuelve                                                             |
+|-----|---------------------------|-----------------------------------------------------------------------------------|
+| 1   | Outbox                    | Evita perder un evento saliente cuando existe un cambio confirmado en PostgreSQL. |
+| 2   | Inbox                     | Evita repetir efectos cuando llega un evento duplicado.                           |
+| 3   | Reintentos del consumidor | Vuelven a ejecutar temporalmente un mensaje que falló al ser consumido.           |
+| 4   | DLT                       | Aísla mensajes que no pudieron procesarse para investigarlos o reprocesarlos.     |
+| 5   | Saga                      | Coordina el proceso de negocio entre varios servicios y sus compensaciones.       |
 
 Un mensaje en DLT representa un fallo al consumir. Un evento `PENDING` en Outbox representa una publicación todavía no confirmada. Aunque ambos requieren monitoreo, no significan lo mismo.
 

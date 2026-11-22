@@ -6,32 +6,32 @@ Abre [http://localhost:8090](http://localhost:8090) y selecciona el clúster `z4
 
 ## Qué muestra cada sección
 
-| Sección       | Utilidad                                                                 |
-|---------------|--------------------------------------------------------------------------|
-| **Brokers**   | Estado del servidor Kafka, versión, particiones y almacenamiento.        |
-| **Topics**    | Eventos almacenados, particiones, offsets y configuración de cada topic. |
-| **Consumers** | Grupos de consumidores, miembros activos y mensajes pendientes (`lag`).  |
+| #   | Sección       | Utilidad                                                                 |
+|-----|---------------|--------------------------------------------------------------------------|
+| 1   | **Brokers**   | Estado del servidor Kafka, versión, particiones y almacenamiento.        |
+| 2   | **Topics**    | Eventos almacenados, particiones, offsets y configuración de cada topic. |
+| 3   | **Consumers** | Grupos de consumidores, miembros activos y mensajes pendientes (`lag`).  |
 
 Para aprender el flujo de una orden se utilizarán principalmente **Topics > Messages** y **Consumers**.
 
 ## Topics del proyecto
 
-| Topic                    | Publica                           | Consume                         | Eventos principales                                       |
-|--------------------------|-----------------------------------|---------------------------------|-----------------------------------------------------------|
-| `inventory-reservation-requests-topic` | Order Service | Inventory Service | `RESERVE_STOCK`, `RELEASE_STOCK` |
-| `inventory-reservation-results-topic` | Inventory Service | Order Service | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
-| `payment-processing-requests-topic` | Order Service | Payment Service | `PAYMENT_REQUESTED` |
-| `payment-processing-results-topic` | Payment Service | Order Service | `PAYMENT_APPROVED`, `PAYMENT_FAILED` |
-| `order-status-events-topic` | Order Service | Consumidores futuros | `ORDER_CANCELLED` |
+| #   | Topic                                  | Publica   | Consume   | Eventos principales                                       |
+|-----|----------------------------------------|-----------|-----------|-----------------------------------------------------------|
+| 1   | `inventory-reservation-requests-topic` | Order     | Inventory | `RESERVE_STOCK`, `RELEASE_STOCK`                          |
+| 2   | `inventory-reservation-results-topic`  | Inventory | Order     | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
+| 3   | `payment-processing-requests-topic`    | Order     | Payment   | `PAYMENT_REQUESTED`                                       |
+| 4   | `payment-processing-results-topic`     | Payment   | Order     | `PAYMENT_APPROVED`, `PAYMENT_FAILED`                      |
+| 5   | `order-status-events-topic`            | Order     | Pendiente | `ORDER_CANCELLED`                                         |
 
 Cuando un consumer agota sus intentos, Spring Kafka conserva el mensaje en el DLT asociado:
 
-| Topic original | Dead Letter Topic |
-|---|---|
-| `inventory-reservation-requests-topic` | `inventory-reservation-requests-topic-dlt` |
-| `payment-processing-requests-topic` | `payment-processing-requests-topic-dlt` |
-| `inventory-reservation-results-topic` | `inventory-reservation-results-topic-dlt` |
-| `payment-processing-results-topic` | `payment-processing-results-topic-dlt` |
+| #   | Topic original                         | Dead Letter Topic                          |
+|-----|----------------------------------------|--------------------------------------------|
+| 1   | `inventory-reservation-requests-topic` | `inventory-reservation-requests-topic-dlt` |
+| 2   | `payment-processing-requests-topic`    | `payment-processing-requests-topic-dlt`    |
+| 3   | `inventory-reservation-results-topic`  | `inventory-reservation-results-topic-dlt`  |
+| 4   | `payment-processing-results-topic`     | `payment-processing-results-topic-dlt`     |
 
 El flujo de reintentos, los headers de diagnóstico y las precauciones para reprocesar se detallan en [reintentos y DLT](07-kafka-retries-dlt.md).
 
@@ -54,14 +54,14 @@ Si acabas de crear una orden, usa **Newest**, amplía el intervalo temporal si a
 
 ## Qué significa cada campo
 
-| Campo         | Significado                                                                          |
-|---------------|--------------------------------------------------------------------------------------|
-| **Offset**    | Posición consecutiva del mensaje dentro de una partición.                            |
-| **Partition** | División del topic donde Kafka almacenó el mensaje.                                  |
-| **Timestamp** | Momento en que Kafka recibió o registró el mensaje.                                  |
-| **Key**       | Clave usada para decidir la partición y conservar el orden de mensajes relacionados. |
-| **Value**     | Evento serializado, normalmente como JSON.                                           |
-| **Headers**   | Metadatos adicionales enviados con el mensaje.                                       |
+| #   | Campo         | Significado                                                                          |
+|-----|---------------|--------------------------------------------------------------------------------------|
+| 1   | **Offset**    | Posición consecutiva del mensaje dentro de una partición.                            |
+| 2   | **Partition** | División del topic donde Kafka almacenó el mensaje.                                  |
+| 3   | **Timestamp** | Momento en que Kafka recibió o registró el mensaje.                                  |
+| 4   | **Key**       | Clave usada para decidir la partición y conservar el orden de mensajes relacionados. |
+| 5   | **Value**     | Evento serializado, normalmente como JSON.                                           |
+| 6   | **Headers**   | Metadatos adicionales enviados con el mensaje.                                       |
 
 El `offset` no identifica globalmente un evento. Solo es único dentro de la combinación `topic + partition`.
 
@@ -83,15 +83,15 @@ Un mensaje puede tener una estructura similar a esta:
 }
 ```
 
-| Propiedad       | Uso                                                                    |
-|-----------------|------------------------------------------------------------------------|
-| `eventId`       | Identifica un evento particular y permite controlar duplicados.        |
-| `eventType`     | Indica lo que ocurrió o lo que se solicita ejecutar.                   |
-| `aggregateId`   | Identifica la entidad principal; normalmente corresponde al `orderId`. |
-| `correlationId` | Relaciona todos los eventos pertenecientes al mismo flujo de compra.   |
-| `previousEventId` | Indica qué evento anterior causó directamente el evento actual.      |
-| `producer`      | Servicio que publicó el evento.                                        |
-| `payload`       | Datos requeridos por el consumidor para procesar el evento.            |
+| #   | Propiedad         | Uso                                                                    |
+|-----|-------------------|------------------------------------------------------------------------|
+| 1   | `eventId`         | Identifica un evento particular y permite controlar duplicados.        |
+| 2   | `eventType`       | Indica lo que ocurrió o lo que se solicita ejecutar.                   |
+| 3   | `aggregateId`     | Identifica la entidad principal; normalmente corresponde al `orderId`. |
+| 4   | `correlationId`   | Relaciona todos los eventos pertenecientes al mismo flujo de compra.   |
+| 5   | `previousEventId` | Indica qué evento anterior causó directamente el evento actual.        |
+| 6   | `producer`        | Servicio que publicó el evento.                                        |
+| 7   | `payload`         | Datos requeridos por el consumidor para procesar el evento.            |
 
 Para seguir una compra completa, el valor más útil es `correlationId`. Para investigar un mensaje específico, utiliza `eventId`.
 
@@ -144,13 +144,13 @@ Si el topic tiene varias particiones y no encuentras un evento, consulta **All p
 
 En **Consumers**, selecciona un grupo para revisar:
 
-| Concepto           | Significado                                                                |
-|--------------------|----------------------------------------------------------------------------|
-| **Group ID**       | Identidad compartida por las instancias de un consumidor.                  |
-| **Members**        | Instancias actualmente conectadas al grupo.                                |
-| **Current offset** | Última posición confirmada por el grupo.                                   |
-| **End offset**     | Última posición disponible en la partición.                                |
-| **Lag**            | Cantidad aproximada de mensajes pendientes: `end offset - current offset`. |
+| #   | Concepto           | Significado                                                                |
+|-----|--------------------|----------------------------------------------------------------------------|
+| 1   | **Group ID**       | Identidad compartida por las instancias de un consumidor.                  |
+| 2   | **Members**        | Instancias actualmente conectadas al grupo.                                |
+| 3   | **Current offset** | Última posición confirmada por el grupo.                                   |
+| 4   | **End offset**     | Última posición disponible en la partición.                                |
+| 5   | **Lag**            | Cantidad aproximada de mensajes pendientes: `end offset - current offset`. |
 
 - `lag = 0`: el consumidor está al día.
 - `lag > 0`: todavía existen mensajes pendientes o el consumidor está detenido/fallando.
@@ -179,10 +179,10 @@ También puedes revisar los logs del productor en Grafana y buscar el `eventId`,
 
 ## Kafbat UI y Grafana no hacen lo mismo
 
-| Herramienta        | Pregunta que responde                                                     |
-|--------------------|---------------------------------------------------------------------------|
-| **Kafbat UI**      | ¿El evento llegó a Kafka y en qué topic, partición y offset quedó?        |
-| **Grafana + Loki** | ¿Qué hizo el código al producir o consumir el evento y qué error ocurrió? |
-| **Base de datos** | ¿Cuál es el estado persistido actual de la orden, saga, inventario o pago? |
+| #   | Herramienta        | Pregunta que responde                                                      |
+|-----|--------------------|----------------------------------------------------------------------------|
+| 1   | **Kafbat UI**      | ¿El evento llegó a Kafka y en qué topic, partición y offset quedó?         |
+| 2   | **Grafana + Loki** | ¿Qué hizo el código al producir o consumir el evento y qué error ocurrió?  |
+| 3   | **Base de datos**  | ¿Cuál es el estado persistido actual de la orden, saga, inventario o pago? |
 
 Una investigación completa normalmente comienza con `correlationId`: se comprueba el evento en Kafbat UI, se buscan los logs relacionados en Grafana y finalmente se valida el estado en la base de datos.

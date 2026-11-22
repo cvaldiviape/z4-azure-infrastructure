@@ -61,13 +61,13 @@ order-status-events-topic
 
 ## Topics del proyecto
 
-| Topic | Productor | Consumidor principal | Tipos de evento |
-|---|---|---|---|
-| `inventory-reservation-requests-topic` | Order Service | Inventory Service | `RESERVE_STOCK`, `RELEASE_STOCK` |
-| `inventory-reservation-results-topic` | Inventory Service | Order Service | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
-| `payment-processing-requests-topic` | Order Service | Payment Service | `PAYMENT_REQUESTED` |
-| `payment-processing-results-topic` | Payment Service | Order Service | `PAYMENT_APPROVED`, `PAYMENT_FAILED` |
-| `order-status-events-topic` | Order Service | Consumidores de pedidos | `ORDER_CANCELLED` |
+| #   | Topic                                  | Productor | Consumidor | Tipos de evento                                           |
+|-----|----------------------------------------|-----------|------------|-----------------------------------------------------------|
+| 1   | `inventory-reservation-requests-topic` | Order     | Inventory  | `RESERVE_STOCK`, `RELEASE_STOCK`                          |
+| 2   | `inventory-reservation-results-topic`  | Inventory | Order      | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
+| 3   | `payment-processing-requests-topic`    | Order     | Payment    | `PAYMENT_REQUESTED`                                       |
+| 4   | `payment-processing-results-topic`     | Payment   | Order      | `PAYMENT_APPROVED`, `PAYMENT_FAILED`                      |
+| 5   | `order-status-events-topic`            | Order     | Pendiente  | `ORDER_CANCELLED`                                         |
 
 ## Dead-letter topics
 

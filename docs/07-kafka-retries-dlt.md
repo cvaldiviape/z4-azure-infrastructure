@@ -22,11 +22,11 @@ Confirmación del offset original
 
 La cantidad anterior se aplica a errores técnicos que podrían ser temporales, por ejemplo una caída de base de datos. Los errores permanentes no se reintentan porque procesar nuevamente el mismo mensaje produciría el mismo resultado:
 
-| Categoría | Ejemplo | Tratamiento |
-|---|---|---|
-| Negocio esperado | Stock insuficiente o pago rechazado | Publicar el evento de negocio correspondiente; no usar el manejador de errores. |
-| Técnico temporal | Timeout, conexión o base de datos no disponible | Aplicar los intentos configurados y, si no se recupera, enviar al DLT. |
-| Permanente | JSON inválido, argumento inválido o regla que no puede cambiar al reintentar | Enviar directamente al DLT. |
+| #   | Categoría        | Ejemplo                                        | Tratamiento                                     |
+|-----|------------------|------------------------------------------------|-------------------------------------------------|
+| 1   | Negocio esperado | Stock insuficiente o pago rechazado            | Publicar el evento de negocio.                  |
+| 2   | Técnico temporal | Timeout, conexión o BD no disponible           | Reintentar y, si no se recupera, enviar al DLT. |
+| 3   | Permanente       | JSON o argumento inválido; regla que no cambia | Enviar directamente al DLT.                     |
 
 La clasificación utiliza una lista positiva: por defecto ninguna excepción se reintenta. Solo `CustomRetryableKafkaException`, `TransientDataAccessException` y `RecoverableDataAccessException` reciben los intentos configurados. De esta manera, errores desconocidos como `NullPointerException`, errores de argumentos y bugs de programación van directamente al DLT.
 
@@ -66,12 +66,12 @@ Los valores se pueden sobrescribir con variables de entorno sin modificar el có
 
 ## Topics DLT
 
-| Consumer | Topic original | Topic de mensajes no recuperados |
-|---|---|---|
-| Inventory Service | `inventory-reservation-requests-topic` | `inventory-reservation-requests-topic-dlt` |
-| Payment Service | `payment-processing-requests-topic` | `payment-processing-requests-topic-dlt` |
-| Order Service | `inventory-reservation-results-topic` | `inventory-reservation-results-topic-dlt` |
-| Order Service | `payment-processing-results-topic` | `payment-processing-results-topic-dlt` |
+| #   | Consumer          | Topic original                         | Topic de mensajes no recuperados           |
+|-----|-------------------|----------------------------------------|--------------------------------------------|
+| 1   | Inventory Service | `inventory-reservation-requests-topic` | `inventory-reservation-requests-topic-dlt` |
+| 2   | Payment Service   | `payment-processing-requests-topic`    | `payment-processing-requests-topic-dlt`    |
+| 3   | Order Service     | `inventory-reservation-results-topic`  | `inventory-reservation-results-topic-dlt`  |
+| 4   | Order Service     | `payment-processing-results-topic`     | `payment-processing-results-topic-dlt`     |
 
 El DLT no es un log ni elimina el mensaje original. Es otro topic Kafka que conserva el key, el value y headers de diagnóstico como el topic, partición y offset originales, además de información sobre la excepción.
 

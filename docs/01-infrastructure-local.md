@@ -4,18 +4,18 @@ Esta carpeta contiene la infraestructura requerida para ejecutar y depurar los m
 
 ## Componentes
 
-| Componente | Puerto del Mac | Puerto del contenedor | Base de datos |
-|---|---:|---:|---|
-| Kafka | 9092 | 9092 | — |
-| Kafbat UI | 8090 | 8080 | — |
-| Grafana | 3000 | 3000 | — |
-| Loki | 3100 | 3100 | — |
-| Alloy | 12345 | 12345 | — |
-| auth-postgres | 5433 | 5432 | `auth_db` |
-| orders-postgres | 5434 | 5432 | `orders_db` |
-| inventory-postgres | 5435 | 5432 | `inventory_db` |
-| payments-postgres | 5436 | 5432 | `payments_db` |
-| pgAdmin | 5050 | 80 | — |
+| #   | Componente         | Puerto del Mac | Puerto del contenedor | Base de datos  |
+|-----|--------------------|----------------|-----------------------|----------------|
+| 1   | Kafka              | 9092           | 9092                  | —              |
+| 2   | Kafbat UI          | 8090           | 8080                  | —              |
+| 3   | Grafana            | 3000           | 3000                  | —              |
+| 4   | Loki               | 3100           | 3100                  | —              |
+| 5   | Alloy              | 12345          | 12345                 | —              |
+| 6   | auth-postgres      | 5433           | 5432                  | `auth_db`      |
+| 7   | orders-postgres    | 5434           | 5432                  | `orders_db`    |
+| 8   | inventory-postgres | 5435           | 5432                  | `inventory_db` |
+| 9   | payments-postgres  | 5436           | 5432                  | `payments_db`  |
+| 10  | pgAdmin            | 5050           | 80                    | —              |
 
 El mapeo `5434:5432` significa que una aplicación ejecutada en el Mac se conecta a `localhost:5434` y Docker redirige la conexión al puerto `5432` de `orders-postgres`.
 
@@ -55,10 +55,10 @@ Desde la interfaz puedes consultar:
 
 Kafka expone dos listeners porque el host cambia según el lugar desde donde se realiza la conexión:
 
-| Consumidor | Dirección | Motivo |
-|---|---|---|
-| Backends ejecutados desde IntelliJ | `localhost:9092` | Se conectan desde el Mac al puerto publicado por Docker. |
-| Kafbat UI | `kafka:29092` | Se conecta desde otro contenedor utilizando el nombre interno del servicio Kafka. |
+| Consumidor                         | Dirección        | Motivo                                                 |
+|------------------------------------|------------------|--------------------------------------------------------|
+| Backends ejecutados desde IntelliJ | `localhost:9092` | Desde el Mac, al puerto publicado por Docker.          |
+| Kafbat UI                          | `kafka:29092`    | Desde otro contenedor, con el nombre interno de Kafka. |
 
 `KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS` registra `kafka:29092` como la dirección inicial que Kafbat UI usa para descubrir el broker. Kafbat UI observa Kafka directamente; no se conecta a los controllers ni reemplaza a los consumers de los backends.
 
@@ -120,11 +120,11 @@ En esta etapa los logs conservan el formato estándar de Spring Boot. Todavía n
 
 Los archivos de configuración son:
 
-| Archivo | Finalidad |
-|---|---|
-| `observability/alloy/config.alloy` | Define qué archivos lee Alloy, las etiquetas y el destino Loki. |
-| `observability/loki/loki-config.yml` | Configura Loki en modo local de una sola instancia y almacenamiento en filesystem. |
-| `observability/grafana/provisioning/datasources/loki.yml` | Registra Loki automáticamente como datasource predeterminado de Grafana. |
+| #   | Archivo                                                   | Finalidad                                                 |
+|-----|-----------------------------------------------------------|-----------------------------------------------------------|
+| 1   | `observability/alloy/config.alloy`                        | Qué archivos lee Alloy, sus etiquetas y el destino Loki.  |
+| 2   | `observability/loki/loki-config.yml`                      | Loki local de una instancia, con almacenamiento en disco. |
+| 3   | `observability/grafana/provisioning/datasources/loki.yml` | Registra Loki como datasource por defecto de Grafana.     |
 
 La explicación propiedad por propiedad y el recorrido completo entre los componentes se encuentra en [Observabilidad local](10-observability.md).
 
