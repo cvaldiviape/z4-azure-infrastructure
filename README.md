@@ -28,6 +28,7 @@ Orden de lectura recomendado para entender el procesamiento distribuido:
 | 09 | [Transactional Inbox y Outbox](docs/09-transactional-inbox-outbox.md) | Consistencia, idempotencia y publicación confiable. |
 | 12 | [Reconciliación de Sagas](docs/12-saga-reconciliation.md) | Diagnóstico por lotes previo al replay. |
 | 13 | [Convención de nombres para topics](docs/13-kafka-topic-naming.md) | Topics orientados a capacidades, solicitudes, resultados y eventos públicos. |
+| 14 | [Particiones, consumers y consumer groups](docs/14-kafka-partitions-consumer-groups.md) | Quién decide qué, para qué sirve el `group-id`, instancias frente a consumers y cómo elegir particiones. |
 
 ### Infraestructura y datos
 
@@ -92,14 +93,14 @@ docker compose -f infra/docker/docker-compose.yml ps
 
 La infraestructura queda disponible en:
 
-| Componente | Dirección local |
-|---|---|
-| Kafka | `localhost:9092` |
-| Auth PostgreSQL | `localhost:5433/auth_db` |
-| Orders PostgreSQL | `localhost:5434/orders_db` |
-| Inventory PostgreSQL | `localhost:5435/inventory_db` |
-| Payments PostgreSQL | `localhost:5436/payments_db` |
-| pgAdmin | [http://localhost:5050](http://localhost:5050) |
+| Componente           | Dirección local                                |
+|----------------------|------------------------------------------------|
+| Kafka                | `localhost:9092`                               |
+| Auth PostgreSQL      | `localhost:5433/auth_db`                       |
+| Orders PostgreSQL    | `localhost:5434/orders_db`                     |
+| Inventory PostgreSQL | `localhost:5435/inventory_db`                  |
+| Payments PostgreSQL  | `localhost:5436/payments_db`                   |
+| pgAdmin              | [http://localhost:5050](http://localhost:5050) |
 
 Los datos se conservan en volúmenes de Docker al ejecutar `docker compose -f infra/docker/docker-compose.yml down`.
 

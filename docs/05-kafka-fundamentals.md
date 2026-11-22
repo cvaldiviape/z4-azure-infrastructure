@@ -169,6 +169,8 @@ Grupo inventory-service
 
 Si hay más consumers que particiones, algunos quedan sin trabajo. Si un consumer falla, Kafka redistribuye sus particiones entre los miembros restantes; este proceso se llama **rebalance**.
 
+La [guía 14](14-kafka-partitions-consumer-groups.md) profundiza en quién decide cada cosa, dónde se define el `group-id`, la relación entre instancias y consumers, y cómo elegir el número de particiones.
+
 ## Confirmación o acknowledgment
 
 Después de procesar un mensaje, el consumer confirma su offset. Esa confirmación comunica: «este grupo ya terminó hasta esta posición».
