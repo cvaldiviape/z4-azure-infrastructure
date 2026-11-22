@@ -35,6 +35,15 @@
       "MaintenanceDB": "payments_db",
       "Username": "ecommerce",
       "SSLMode": "prefer"
+    },
+    "5": {
+      "Name": "Ops database",
+      "Group": "Z4 Event Commerce Local",
+      "Host": "ops-postgres",
+      "Port": 5432,
+      "MaintenanceDB": "ops_db",
+      "Username": "ecommerce",
+      "SSLMode": "prefer"
     }
   }
 }

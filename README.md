@@ -20,16 +20,18 @@ Toda la documentación de infraestructura está centralizada en [`docs`](docs):
 
 Orden de lectura recomendado para entender el procesamiento distribuido:
 
-| Orden | Guía                                 | Contenido                                                           |
-|-------|--------------------------------------|---------------------------------------------------------------------|
-| 05    | [Fundamentos de Kafka][d05]          | Brokers, topics, particiones, offsets y consumer groups.            |
-| 07    | [Reintentos y DLT][d07]              | Clasificación de errores, reintentos y mensajes fallidos.           |
-| 08    | [Saga de compra][d08]                | Orquestación, estados, compensaciones y timeout.                    |
-| 09    | [Transactional Inbox y Outbox][d09]  | Consistencia, idempotencia y publicación confiable.                 |
-| 12    | [Reconciliación de Sagas][d12]       | Diagnóstico por lotes previo al replay.                             |
-| 13    | [Nombres de topics][d13]             | Topics por capacidad: solicitudes, resultados y eventos públicos.   |
-| 14    | [Particiones y consumer groups][d14] | Quién decide qué, `group-id`, instancias y cómo elegir particiones. |
-| 15    | [Estado de confiabilidad][d15]       | Qué está aplicado, qué resuelve cada mecanismo y qué falta.         |
+| Orden | Guía                                   | Contenido                                                           |
+|-------|----------------------------------------|---------------------------------------------------------------------|
+| 05    | [Fundamentos de Kafka][d05]            | Brokers, topics, particiones, offsets y consumer groups.            |
+| 07    | [Reintentos y DLT][d07]                | Clasificación de errores, reintentos y mensajes fallidos.           |
+| 08    | [Saga de compra][d08]                  | Orquestación, estados, compensaciones y timeout.                    |
+| 09    | [Transactional Inbox y Outbox][d09]    | Consistencia, idempotencia y publicación confiable.                 |
+| 12    | [Reconciliación de Sagas][d12]         | Diagnóstico por lotes previo al replay.                             |
+| 13    | [Nombres de topics][d13]               | Topics por capacidad: solicitudes, resultados y eventos públicos.   |
+| 14    | [Particiones y consumer groups][d14]   | Quién decide qué, `group-id`, instancias y cómo elegir particiones. |
+| 15    | [Estado de confiabilidad][d15]         | Qué está aplicado, qué resuelve cada mecanismo y qué falta.         |
+| 16    | [ACK del producer y del consumer][d16] | Confirmación de envío, commit del offset y qué pasa si falta.       |
+| 17    | [Qué es un broker][d17]                | Responsabilidades, clúster, KRaft, listeners y el broker local.     |
 
 ### Infraestructura y datos
 
@@ -204,3 +206,5 @@ No agregues `-v` al comando anterior si deseas conservar los datos.
 [d13]: docs/13-kafka-topic-naming.md
 [d14]: docs/14-kafka-partitions-consumer-groups.md
 [d15]: docs/15-reliability-status.md
+[d16]: docs/16-kafka-acknowledgments.md
+[d17]: docs/17-kafka-broker.md

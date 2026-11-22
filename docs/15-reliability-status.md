@@ -54,7 +54,7 @@ En el orden recomendado:
 | 4   | Base de datos y Kafka desincronizados | Outbox                    | Aplicado  |
 | 5   | Saga detenida                         | Timeout                   | Aplicado  |
 | 6   | Saber qué pasó con una Saga detenida  | Reconciliación            | Pendiente |
-| 7   | Reprocesar mensajes fallidos          | Replay controlado del DLT | Pendiente |
+| 7   | Reprocesar mensajes fallidos          | Replay controlado del DLT | Aplicado  |
 | 8   | Enterarse de los fallos               | Alertas                   | Pendiente |
 
 ## Siguiente paso recomendado
