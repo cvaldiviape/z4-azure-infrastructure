@@ -1,6 +1,6 @@
 # Z4 Event Commerce
 
-Proyecto educativo con cuatro microservicios Spring Boot 4, Java 21, PostgreSQL y Kafka. Las aplicaciones se ejecutan desde IntelliJ para permitir debugging; Docker se utiliza únicamente para Kafka y las bases de datos.
+Proyecto educativo con cinco microservicios Spring Boot 4, Java 21, PostgreSQL y Kafka. Las aplicaciones se ejecutan desde IntelliJ para permitir debugging; Docker se utiliza únicamente para Kafka y las bases de datos.
 
 ## Documentación de servicios
 
@@ -82,12 +82,27 @@ PAYMENT_FAILED
 - Docker Desktop con Docker Compose.
 - Postman o curl.
 
-Verifica que Java y Maven utilicen JDK 21:
+Verifica que tu terminal use JDK 21:
 
 ```bash
 java -version
-mvn -version
 ```
+
+Si muestra otra versión (por ejemplo 17), cámbiala en esa terminal:
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+```
+
+Para dejarlo fijo en todas las terminales, agrega esa línea al final de `~/.zshrc`.
+
+## Orden para levantar todo
+
+| #   | Paso                     | Cuándo                                   | Sección                           |
+|-----|--------------------------|------------------------------------------|-----------------------------------|
+| 1   | Infraestructura (Docker) | Siempre, primero                         | Infraestructura local             |
+| 2   | Librerías `z4-shared-*`  | La primera vez y al cambiar una librería | Librerías compartidas             |
+| 3   | Servicios                | Siempre, al final                        | Ejecutar y depurar desde IntelliJ |
 
 ## Infraestructura local
 
@@ -107,32 +122,67 @@ La infraestructura queda disponible en:
 | 3   | Orders PostgreSQL    | `localhost:5434/orders_db`                     |
 | 4   | Inventory PostgreSQL | `localhost:5435/inventory_db`                  |
 | 5   | Payments PostgreSQL  | `localhost:5436/payments_db`                   |
-| 6   | pgAdmin              | [http://localhost:5050](http://localhost:5050) |
+| 6   | Ops PostgreSQL       | `localhost:5437/ops_db`                        |
+| 7   | pgAdmin              | [http://localhost:5050](http://localhost:5050) |
 
 Los datos se conservan en volúmenes de Docker al ejecutar `docker compose -f infra/docker/docker-compose.yml down`.
+
+Sin la infraestructura arriba los servicios no arrancan: al iniciar se conectan a su base de datos y Flyway ejecuta las migraciones.
+
+## Librerías compartidas
+
+Los servicios dependen de tres librerías propias (`z4-shared-core`, `z4-shared-security` y `z4-shared-kafka`) que no están en Maven Central. Hay que instalarlas en `~/.m2` antes de compilar o ejecutar cualquier servicio, y otra vez después de cambiar una librería:
+
+```bash
+backend/libs/install-all.sh
+```
+
+El script elige el JDK 21 por su cuenta. Para instalar una sola librería a mano:
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+```
+
+```bash
+./mvnw install
+```
+
+En IntelliJ, después de instalarlas, usa **Reload Maven Project** en cada servicio para que tome los `.jar` nuevos. Por qué hace falta instalarlas si no tienen `main`: [backend/libs/docs/01-librerias-compartidas.md](../backend/libs/docs/01-librerias-compartidas.md).
 
 ## Ejecutar y depurar desde IntelliJ
 
 Abre cada repositorio Maven como módulo y configura JDK 21 como Project SDK y Maven Runner JDK. Ejecuta en modo **Debug** las siguientes clases:
 
-| #   | Aplicación                    | Puerto |
-|-----|-------------------------------|--------|
-| 1   | `AuthServiceApplication`      | 8081   |
-| 2   | `OrderServiceApplication`     | 8082   |
-| 3   | `InventoryServiceApplication` | 8083   |
-| 4   | `PaymentServiceApplication`   | 8084   |
+Orden recomendado:
+
+| #   | Aplicación                    | Puerto | Por qué en este lugar                                          |
+|-----|-------------------------------|--------|----------------------------------------------------------------|
+| 1   | `AuthServiceApplication`      | 8081   | Da el token para registrarse e iniciar sesión                  |
+| 2   | `InventoryServiceApplication` | 8083   | Debe escuchar cuando llegue la reserva de stock                |
+| 3   | `PaymentServiceApplication`   | 8084   | Debe escuchar cuando llegue el cobro                           |
+| 4   | `OrderServiceApplication`     | 8082   | Inicia la Saga; conviene que los demás ya estén arriba         |
+| 5   | `OpsServiceApplication`       | 8085   | Solo guarda lo que llega al DLT; puede ir en cualquier momento |
+
+Otro orden no rompe nada: los servicios no se llaman entre sí, se comunican por Kafka. Si inventory está apagado cuando se crea un pedido, el mensaje espera en el topic y se procesa cuando inventory arranque. El único riesgo es que tarde tanto que la Saga llegue a su timeout y el pedido se cancele; por eso order-service va al final.
+
+Desde la terminal, con JDK 21 activo, cada servicio se arranca dentro de su carpeta con:
+
+```bash
+./mvnw spring-boot:run
+```
 
 Breakpoints recomendados para seguir la Saga:
 
 ```text
 OrderController
 → OrderServiceImpl
-→ OrderEventProducer
+→ OutboxRelay                  (z4-shared-kafka)
 → InventoryEventConsumer
-→ InventoryServiceImpl
+→ InventoryCommandServiceImpl
 → PurchaseSagaEventConsumer
 → PurchaseSagaServiceImpl
 → StockReservedEventStrategy
+→ PaymentEventConsumer
 → PaymentServiceImpl
 → PaymentApprovedEventStrategy
 ```
@@ -141,7 +191,7 @@ Cada microservicio se ejecuta como un proceso Java independiente. IntelliJ mostr
 
 ## Compilar
 
-Cada backend es un proyecto Maven independiente. Entra en el backend que deseas validar; por ejemplo:
+Cada backend es un proyecto Maven independiente. Con las librerías ya instaladas y JDK 21 activo, entra en el backend que deseas validar; por ejemplo:
 
 ```bash
 cd backend/order-service
