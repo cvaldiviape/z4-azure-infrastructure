@@ -53,7 +53,7 @@ Para usar los endpoints `/ops/**` hace falta un usuario con el rol `ADMIN` en `u
 - `purchase_sagas`: `id`, `order_id`, `status`, `current_step`, `last_event_id`, `error_message`, `timed_out_at`, `version`, `created_at`, `updated_at`
 - `purchase_saga_histories`: `id`, `purchase_saga_id`, `order_id`, `order_status`, `saga_status`, `event_type`, `event_id`, `error_message`, `created_at`
 
-`purchase_saga_histories` alimenta la API `/ops/purchase-sagas/{orderId}`.
+`purchase_saga_histories` alimenta la API `/ops/purchase-sagas/{orderId}`. Guarda cada cambio de estado de la Saga, no los comandos que envía: esos están en `outbox_events` (ver [22 · Historial de la Saga y outbox](22-saga-history-outbox.md)).
 
 ## `inventory_db` · inventory-service
 

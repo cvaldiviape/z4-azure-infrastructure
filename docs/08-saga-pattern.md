@@ -147,6 +147,8 @@ Las estrategias implementadas son:
 | 4   | `PaymentFailedEventStrategy`     | Marca la Saga como compensando y encola `RELEASE_STOCK`. |
 | 5   | `StockReleasedEventStrategy`     | Cancela el pedido y completa la compensación.            |
 
+Qué se guarda en el historial y qué en el outbox (por qué `RESERVE_STOCK` no aparece en el historial): [22 · Historial de la Saga y outbox](22-saga-history-outbox.md).
+
 ## Timeout de Saga
 
 Order ejecuta periódicamente un detector de Sagas que permanecen demasiado tiempo en `STARTED`, `IN_PROGRESS` o `COMPENSATING`. La antigüedad se calcula utilizando `updated_at` y, para una Saga que todavía no tuvo transiciones, `created_at`.

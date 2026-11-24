@@ -36,6 +36,8 @@ Orden de lectura recomendado para entender el procesamiento distribuido:
 | 17    | [Qué es un broker][d17]                | Responsabilidades, clúster, KRaft, listeners y el broker local.     |
 | 18    | [Ops Service y librerías][d18]         | DLT guardado, replay, API de Sagas y librerías `z4-shared-*`.       |
 | 19    | [Plan a futuro][d19]                   | Multi-tenant, los tres fronts, orden de trabajo y pendientes.       |
+| 21    | [El mensaje: IntegrationEventDto][d21] | Campos del evento, cómo se crea y catálogo de eventos.              |
+| 22    | [Historial de la Saga y outbox][d22]   | Qué va al historial, qué al outbox y la línea de tiempo completa.   |
 
 ### Infraestructura y datos
 
@@ -266,3 +268,5 @@ No agregues `-v` al comando anterior si deseas conservar los datos.
 [d18]: docs/18-ops-service.md
 [d19]: docs/19-roadmap.md
 [d20]: docs/20-database-tables.md
+[d21]: docs/21-integration-event.md
+[d22]: docs/22-saga-history-outbox.md
