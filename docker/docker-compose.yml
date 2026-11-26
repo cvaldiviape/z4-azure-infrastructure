@@ -63,6 +63,7 @@ services:
       - ../../backend/order-service/logs:/var/log/z4/order-service:ro
       - ../../backend/inventory-service/logs:/var/log/z4/inventory-service:ro
       - ../../backend/payment-service/logs:/var/log/z4/payment-service:ro
+      - ../../backend/ops-service/logs:/var/log/z4/ops-service:ro
 
   grafana:
     image: grafana/grafana:13.2.0
@@ -142,6 +143,22 @@ services:
     volumes:
       - payments_db_data:/var/lib/postgresql/data
 
+  ops-postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5437:5432"
+    environment:
+      POSTGRES_DB: ops_db
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce -d ops_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ops_db_data:/var/lib/postgresql/data
+
   pgadmin:
     image: dpage/pgadmin4:9.17
     ports:
@@ -160,6 +177,8 @@ services:
         condition: service_healthy
       payments-postgres:
         condition: service_healthy
+      ops-postgres:
+        condition: service_healthy
     volumes:
       - pgadmin_data:/var/lib/pgadmin
       - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
@@ -171,6 +190,7 @@ volumes:
   orders_db_data:
   inventory_db_data:
   payments_db_data:
+  ops_db_data:
   pgadmin_data:
   loki_data:
   alloy_data:

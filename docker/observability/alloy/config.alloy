@@ -30,6 +30,14 @@ local.file_match "payment_service" {
   }]
 }
 
+local.file_match "ops_service" {
+  path_targets = [{
+    "__path__"    = "/var/log/z4/ops-service/*.log",
+    "environment" = "local",
+    "service_name" = "ops-service",
+  }]
+}
+
 loki.source.file "auth_service" {
   targets    = local.file_match.auth_service.targets
   forward_to = [loki.process.spring_boot.receiver]
@@ -47,6 +55,11 @@ loki.source.file "inventory_service" {
 
 loki.source.file "payment_service" {
   targets    = local.file_match.payment_service.targets
+  forward_to = [loki.process.spring_boot.receiver]
+}
+
+loki.source.file "ops_service" {
+  targets    = local.file_match.ops_service.targets
   forward_to = [loki.process.spring_boot.receiver]
 }
 

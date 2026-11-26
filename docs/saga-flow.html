@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flujo de la Saga</title>
+<style>
+:root{--bg:#faf9f5;--card:#fff;--text:#1f1e1d;--muted:#73726c;--faint:#b4b2a9;--border:#e3e1d9;--border-strong:#c9c7bd;
+--lane-fill:#EEEDFE;--lane-stroke:#534AB7;--lane-text:#3C3489;--client-fill:#F1EFE8;--client-stroke:#5F5E5A;--client-text:#444441;
+--blue:#378ADD;--coral:#D85A30;--n-bg:#F1EFE8;--n-fg:#5F5E5A;--w-bg:#FAEEDA;--w-fg:#854F0B;--d-bg:#FCEBEB;--d-fg:#A32D2D;--s-bg:#EAF3DE;--s-fg:#3B6D11;--a-bg:#E6F1FB;--a-fg:#185FA5}
+@media (prefers-color-scheme: dark){:root{--bg:#1f1e1d;--card:#2a2928;--text:#ecebe6;--muted:#a3a29b;--faint:#5f5e5a;--border:#3a3937;--border-strong:#55534f;
+--lane-fill:#3C3489;--lane-stroke:#AFA9EC;--lane-text:#EEEDFE;--client-fill:#444441;--client-stroke:#B4B2A9;--client-text:#F1EFE8;
+--n-bg:#444441;--n-fg:#D3D1C7;--w-bg:#633806;--w-fg:#FAC775;--d-bg:#791F1F;--d-fg:#F7C1C1;--s-bg:#27500A;--s-fg:#C0DD97;--a-bg:#0C447C;--a-fg:#B5D4F4}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}
+main{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:22px;font-weight:500;margin:0 0 4px}
+p.sub{color:var(--muted);margin:0 0 20px;font-size:14px}
+button{font:inherit;font-size:14px;color:var(--text);background:transparent;border:0.5px solid var(--border-strong);border-radius:8px;padding:6px 14px;cursor:pointer}
+button:hover{background:var(--card)}
+.sc button.on{background:var(--a-bg);color:var(--a-fg);border-color:var(--a-fg)}
+.th{font-size:14px;font-weight:500;fill:var(--text)}
+.ts{font-size:12px;fill:var(--muted)}
+.lane rect{fill:var(--lane-fill);stroke:var(--lane-stroke)}.lane text{fill:var(--lane-text)}
+.client rect{fill:var(--client-fill);stroke:var(--client-stroke)}.client text{fill:var(--client-text)}
+.pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:8px;margin:0 6px 4px 0}
+.row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px;padding:6px 0;border-top:0.5px solid var(--border);font-size:14px}
+.k{color:var(--muted);font-size:13px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;word-break:break-word}
+#det{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:16px 20px}
+.legend{font-size:13px;color:var(--muted);margin:16px 0 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Flujo de un pedido</h1>
+<p class="sub">Order orquesta la Saga; Inventory y Payment responden por Kafka. Elige un escenario y avanza paso a paso, o haz clic en una flecha.</p>
+<div class="sc" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px">
+  <button data-s="ok" class="on">Pago aprobado</button>
+  <button data-s="stock">Sin stock</button>
+  <button data-s="fail">Pago rechazado</button>
+</div>
+<svg id="seq" width="100%" viewBox="0 0 680 420" role="img" aria-label="Secuencia de mensajes entre Cliente, Order, Inventory y Payment"></svg>
+<div style="display:flex;align-items:center;gap:8px;margin:8px 0 12px">
+  <button id="prev" aria-label="Paso anterior">←</button>
+  <button id="next">Siguiente →</button>
+  <span id="pos" style="font-size:13px;color:var(--muted);margin-left:4px"></span>
+</div>
+<div id="det"></div>
+<p class="legend">Línea continua: HTTP. Línea punteada: mensaje Kafka (pasa por outbox_events y OutboxRelayScheduler, que publica cada 1 s). Naranja: compensación. Atajos: ← y →.</p>
+</main>
+<script>
+const L={C:85,O:255,I:425,P:595},N={C:'Cliente',O:'Order',I:'Inventory',P:'Payment'};
+const s1={f:'C',t:'O',m:'POST /orders',topic:'— (HTTP, con JWT)',send:'Cliente (curl / Postman)',recv:['OrderController.create()','OrderServiceImpl.create()'],tables:['orders → CREATED','order_items','purchase_sagas → STARTED','purchase_saga_histories (#1)','outbox_events → RESERVE_STOCK (PENDING)'],o:'CREATED',s:'STARTED',note:'Responde 201 al cliente aquí mismo. No espera al resto: lo demás ocurre en segundo plano.'};
+const s2={f:'O',t:'I',m:'RESERVE_STOCK',topic:'inventory-reservation-requests-topic',send:'OutboxRelayScheduler (Order) lee la fila PENDING y la publica',recv:['InventoryEventConsumer','InventoryCommandServiceImpl.process()','ReserveStockEventStrategy.execute()','StockServiceImpl.tryReserve() por cada item'],tables:['inventories → stock disponible baja','inventory_reservations → RESERVED','inventory_movements → RESERVATION','inbox_events (eventId)','outbox_events → STOCK_RESERVED'],o:'CREATED',s:'STARTED'};
+const s3={f:'I',t:'O',m:'STOCK_RESERVED',topic:'inventory-reservation-results-topic',send:'OutboxRelayScheduler (Inventory)',recv:['PurchaseSagaEventConsumer','PurchaseSagaServiceImpl.handleInventoryEvent()','StockReservedEventStrategy.execute()','PurchaseSagaStateManager.update()'],tables:['orders → PAYMENT_PENDING','purchase_sagas → IN_PROGRESS','purchase_saga_histories (#2)','inbox_events','outbox_events → PAYMENT_REQUESTED'],o:'PAYMENT_PENDING',s:'IN_PROGRESS'};
+const pay=(ok)=>({f:'O',t:'P',m:'PAYMENT_REQUESTED',topic:'payment-processing-requests-topic',send:'OutboxRelayScheduler (Order)',recv:['PaymentEventConsumer','PaymentServiceImpl.process()','PaymentServiceImpl.processEvent()'],tables:['payments → '+(ok?'APPROVED':'FAILED'),'payment_attempts'+(ok?'':' (guarda el motivo)'),'inbox_events','outbox_events → '+(ok?'PAYMENT_APPROVED':'PAYMENT_FAILED')],o:'PAYMENT_PENDING',s:'IN_PROGRESS',note:ok?'paymentToken = TEST_APPROVED → aprobado.':'paymentToken distinto de TEST_APPROVED → rechazado. El motivo se queda en payments_db: no viaja a Order.'});
+const S={
+ok:[s1,s2,s3,pay(true),{f:'P',t:'O',m:'PAYMENT_APPROVED',topic:'payment-processing-results-topic',send:'OutboxRelayScheduler (Payment)',recv:['PurchaseSagaEventConsumer','PurchaseSagaServiceImpl.handlePaymentEvent()','PaymentApprovedEventStrategy.execute()','PurchaseSagaStateManager.update()'],tables:['orders → CONFIRMED','purchase_sagas → COMPLETED','purchase_saga_histories (#3)','inbox_events'],o:'CONFIRMED',s:'COMPLETED',note:'Fin. No se publica ningún evento ORDER_CONFIRMED.'}],
+stock:[s1,Object.assign({},s2,{tables:['inventories → se reserva hasta que un producto no alcanza','StockServiceImpl.releaseAll() devuelve lo ya reservado','inbox_events','outbox_events → STOCK_NOT_AVAILABLE'],note:'Todo pasa en una sola transacción de Inventory.'}),{f:'I',t:'O',m:'STOCK_NOT_AVAILABLE',topic:'inventory-reservation-results-topic',send:'OutboxRelayScheduler (Inventory)',recv:['PurchaseSagaEventConsumer','PurchaseSagaServiceImpl.handleInventoryEvent()','StockNotAvailableEventStrategy.execute()','PurchaseSagaStateManager.update()'],tables:['orders → CANCELLED','purchase_sagas → COMPLETED','purchase_saga_histories (#2, se guarda como ORDER_CANCELLED)','outbox_events → ORDER_CANCELLED'],o:'CANCELLED',s:'COMPLETED',note:'Nunca se llama a Payment.'},{f:'O',t:'O',m:'ORDER_CANCELLED',topic:'order-status-events-topic',send:'OutboxRelayScheduler (Order)',recv:['Nadie lo consume todavía'],tables:['outbox_events → PUBLISHED'],o:'CANCELLED',s:'COMPLETED',note:'Fin. Es un aviso público para futuros consumidores.'}],
+fail:[s1,s2,s3,pay(false),{f:'P',t:'O',m:'PAYMENT_FAILED',topic:'payment-processing-results-topic',send:'OutboxRelayScheduler (Payment)',recv:['PurchaseSagaEventConsumer','PurchaseSagaServiceImpl.handlePaymentEvent()','PaymentFailedEventStrategy.execute()','PurchaseSagaStateManager.update()'],tables:['orders → sin cambio (PAYMENT_PENDING)','purchase_sagas → COMPENSATING','purchase_saga_histories (#3, sin motivo)','outbox_events → RELEASE_STOCK'],o:'PAYMENT_PENDING',s:'COMPENSATING',note:'Empieza la compensación: hay que devolver el stock ya reservado.'},{f:'O',t:'I',m:'RELEASE_STOCK',comp:1,topic:'inventory-reservation-requests-topic',send:'OutboxRelayScheduler (Order)',recv:['InventoryEventConsumer','InventoryCommandServiceImpl.process()','ReleaseStockEventStrategy.execute()','StockServiceImpl.findReservedByOrderId() + releaseAll()'],tables:['inventories → stock vuelve','inventory_reservations → liberadas','inventory_movements','inbox_events','outbox_events → STOCK_RELEASED'],o:'PAYMENT_PENDING',s:'COMPENSATING'},{f:'I',t:'O',m:'STOCK_RELEASED',comp:1,topic:'inventory-reservation-results-topic',send:'OutboxRelayScheduler (Inventory)',recv:['PurchaseSagaEventConsumer','PurchaseSagaServiceImpl.handleInventoryEvent()','StockReleasedEventStrategy.execute()','PurchaseSagaStateManager.update()'],tables:['orders → CANCELLED','purchase_sagas → COMPLETED','purchase_saga_histories (#4, se guarda como ORDER_CANCELLED)','outbox_events → ORDER_CANCELLED'],o:'CANCELLED',s:'COMPLETED'},{f:'O',t:'O',m:'ORDER_CANCELLED',topic:'order-status-events-topic',send:'OutboxRelayScheduler (Order)',recv:['Nadie lo consume todavía'],tables:['outbox_events → PUBLISHED'],o:'CANCELLED',s:'COMPLETED',note:'Fin.'}]};
+let sc='ok',i=0;
+const tone={CREATED:'n',STARTED:'n',PAYMENT_PENDING:'w',IN_PROGRESS:'w',COMPENSATING:'d',CONFIRMED:'s',CANCELLED:'d',COMPLETED:'s'};
+function pill(lbl,v){const t=tone[v]||'n';return `<span class="pill" style="background:var(--${t}-bg);color:var(--${t}-fg)">${lbl}: ${v}</span>`}
+function draw(){const st=S[sc],H=70+st.length*46+10;const svg=document.getElementById('seq');svg.setAttribute('viewBox',`0 0 680 ${H}`);
+let h='<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
+for(const k in L){h+=`<g class="${k==='C'?'client':'lane'}"><rect x="${L[k]-65}" y="10" width="130" height="34" rx="6" stroke-width="0.5"/><text class="th" x="${L[k]}" y="27" text-anchor="middle" dominant-baseline="central">${N[k]}</text></g><line x1="${L[k]}" y1="44" x2="${L[k]}" y2="${H-6}" stroke="var(--border-strong)" stroke-width="0.5" stroke-dasharray="4 4"/>`}
+st.forEach((s,j)=>{const y=74+j*46,cur=j===i,past=j<i;const col=cur?(s.comp?'var(--coral)':'var(--blue)'):'var(--faint)';const op=cur?1:past?0.85:0.3;const sw=cur?2:1;
+if(s.f===s.t){h+=`<g opacity="${op}" style="cursor:pointer" onclick="go(${j})"><rect x="${L[s.f]+10}" y="${y-14}" width="160" height="26" rx="4" fill="none" stroke="${col}" stroke-width="${sw}"/><text class="ts" x="${L[s.f]+90}" y="${y-1}" text-anchor="middle" dominant-baseline="central">${j+1}. publica ${s.m}</text></g>`;return}
+const x1=L[s.f],x2=L[s.t],d=x2>x1?-10:10;h+=`<g opacity="${op}" style="cursor:pointer" onclick="go(${j})"><line x1="${x1}" y1="${y}" x2="${x2+d}" y2="${y}" stroke="${col}" stroke-width="${sw}" ${s.f==='C'?'':'stroke-dasharray="6 4"'} marker-end="url(#ah)"/><line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="transparent" stroke-width="14"/><text class="${cur?'th':'ts'}" x="${(x1+x2)/2}" y="${y-10}" text-anchor="middle">${j+1}. ${s.m}</text></g>`});
+svg.innerHTML=h;
+const s=st[i];document.getElementById('pos').textContent=`Paso ${i+1} de ${st.length}`;
+document.getElementById('det').innerHTML=`<div style="font-size:16px;font-weight:500;margin-bottom:8px">${i+1}. ${s.m} <span style="font-size:13px;font-weight:400;color:var(--muted)">${N[s.f]} → ${s.f===s.t?'Kafka':N[s.t]}</span></div>
+<div style="margin-bottom:6px">${pill('Pedido',s.o)}${pill('Saga',s.s)}</div>
+<div class="row"><span class="k">Topic</span><code>${s.topic}</code></div>
+<div class="row"><span class="k">Lo envía</span><span>${s.send}</span></div>
+<div class="row"><span class="k">Lo recibe</span><span>${s.recv.map((r,n)=>(n?'<span style="color:var(--faint)">↳ </span>':'')+'<code>'+r+'</code>').join('<br>')}</span></div>
+<div class="row"><span class="k">Qué guarda</span><span>${s.tables.map(t=>'<code>'+t+'</code>').join('<br>')}</span></div>
+${s.note?`<div class="row"><span class="k">Ojo</span><span>${s.note}</span></div>`:''}`}
+function go(j){i=j;draw()}
+document.getElementById('next').onclick=()=>{i=(i+1)%S[sc].length;draw()};
+document.getElementById('prev').onclick=()=>{i=(i-1+S[sc].length)%S[sc].length;draw()};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')document.getElementById('next').click();if(e.key==='ArrowLeft')document.getElementById('prev').click()});
+document.querySelectorAll('.sc button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.sc button').forEach(x=>x.classList.remove('on'));b.classList.add('on');sc=b.dataset.s;i=0;draw()});
+draw();
+</script>
+</body>
+</html>

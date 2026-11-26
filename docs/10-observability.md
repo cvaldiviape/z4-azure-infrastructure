@@ -22,15 +22,17 @@ Grafana no lee directamente los archivos y Alloy no proporciona una pantalla par
 
 ## Archivos involucrados
 
-| Archivo                                                       | Quién lo utiliza | Responsabilidad                                               |
-|--------------------------------------------------------------|-------------------|---------------------------------------------------------------|
-| `backend/*-service/src/main/resources/application-local.yml` | Spring Boot       | Crea el archivo de log de cada backend.                       |
-| `infra/docker/docker-compose.yml`                                   | Docker Compose    | Crea los contenedores, puertos, volúmenes y montajes.         |
-| `alloy/config.alloy`                                         | Alloy             | Localiza, etiqueta y procesa los archivos antes de enviarlos. |
-| `loki/loki-config.yml`                                       | Loki              | Configura la recepción, indexación y almacenamiento local.    |
-| `grafana/provisioning/datasources/loki.yml`                  | Grafana           | Registra automáticamente a Loki como fuente de datos.         |
-| `grafana/provisioning/dashboards/dashboards.yml`             | Grafana           | Indica dónde debe buscar dashboards declarados como archivos. |
-| `grafana/provisioning/dashboards/json/purchase-saga-flow.json` | Grafana         | Crea el dashboard para seguir una compra por `correlationId`.  |
+| #   | Archivo                                          | Quién lo utiliza | Responsabilidad                                      |
+|-----|--------------------------------------------------|------------------|------------------------------------------------------|
+| 1   | `backend/*-service/…/application-local.yml`      | Spring Boot      | Crea el archivo de log de cada backend               |
+| 2   | `infra/docker/docker-compose.yml`                | Docker Compose   | Crea contenedores, puertos, volúmenes y montajes     |
+| 3   | `alloy/config.alloy`                             | Alloy            | Localiza, etiqueta y procesa los logs                |
+| 4   | `loki/loki-config.yml`                           | Loki             | Recepción, indexación y almacenamiento local         |
+| 5   | `grafana/provisioning/datasources/loki.yml`      | Grafana          | Registra Loki como fuente de datos                   |
+| 6   | `grafana/provisioning/dashboards/dashboards.yml` | Grafana          | Dónde buscar los dashboards en archivos              |
+| 7   | `grafana/…/json/purchase-saga-flow.json`         | Grafana          | Dashboard para seguir una compra por `correlationId` |
+
+Las rutas de `alloy`, `loki` y `grafana` son relativas a `infra/docker/observability/`.
 
 ## 1. Spring Boot crea los archivos
 
@@ -61,11 +63,11 @@ volumes:
 
 La estructura significa:
 
-| Parte | Significado |
-|---|---|
-| `../../backend/order-service/logs` | Carpeta real del backend en el Mac. |
-| `/var/log/z4/order-service` | Ruta con la que Alloy ve esa carpeta dentro de su contenedor. |
-| `ro` | Montaje de solo lectura; Alloy puede leer los logs, pero no modificarlos. |
+| #   | Parte                              | Significado                                                               |
+|-----|------------------------------------|---------------------------------------------------------------------------|
+| 1   | `../../backend/order-service/logs` | Carpeta real del backend en el Mac.                                       |
+| 2   | `/var/log/z4/order-service`        | Ruta con la que Alloy ve esa carpeta dentro de su contenedor.             |
+| 3   | `ro`                               | Montaje de solo lectura; Alloy puede leer los logs, pero no modificarlos. |
 
 Por eso `config.alloy` utiliza rutas `/var/log/z4/...` y no rutas `backend/...`: Alloy se ejecuta dentro de Docker.
 
@@ -153,20 +155,20 @@ loki.write "local" {
 
 El archivo `loki/loki-config.yml` configura una instancia local sencilla:
 
-| Propiedad | Utilidad |
-|---|---|
-| `auth_enabled: false` | Desactiva autenticación y multitenencia únicamente para desarrollo local. |
-| `server.http_listen_port: 3100` | Puerto HTTP en el que Loki recibe y consulta logs. |
-| `common.path_prefix: /loki` | Carpeta base de los datos dentro del contenedor. |
-| `replication_factor: 1` | Conserva una copia porque localmente solo existe una instancia. |
-| `kvstore.store: inmemory` | Guarda en memoria el estado de coordinación de esta instancia única. |
-| `storage.filesystem` | Guarda chunks y reglas en el filesystem local de Loki. |
-| `store: tsdb` | Utiliza TSDB para el índice de los logs. |
-| `object_store: filesystem` | Guarda los datos en disco, no en S3, Azure Blob u otro servicio cloud. |
-| `schema: v13` | Define el formato de almacenamiento utilizado por Loki. |
-| `index.period: 24h` | Organiza el índice en periodos diarios. |
-| `allow_structured_metadata: true` | Permite metadata estructurada adicional. |
-| `reporting_enabled: false` | Desactiva el envío de estadísticas de uso. |
+| #   | Propiedad                         | Utilidad                                                                  |
+|-----|-----------------------------------|---------------------------------------------------------------------------|
+| 1   | `auth_enabled: false`             | Desactiva autenticación y multitenencia únicamente para desarrollo local. |
+| 2   | `server.http_listen_port: 3100`   | Puerto HTTP en el que Loki recibe y consulta logs.                        |
+| 3   | `common.path_prefix: /loki`       | Carpeta base de los datos dentro del contenedor.                          |
+| 4   | `replication_factor: 1`           | Conserva una copia porque localmente solo existe una instancia.           |
+| 5   | `kvstore.store: inmemory`         | Guarda en memoria el estado de coordinación de esta instancia única.      |
+| 6   | `storage.filesystem`              | Guarda chunks y reglas en el filesystem local de Loki.                    |
+| 7   | `store: tsdb`                     | Utiliza TSDB para el índice de los logs.                                  |
+| 8   | `object_store: filesystem`        | Guarda los datos en disco, no en S3, Azure Blob u otro servicio cloud.    |
+| 9   | `schema: v13`                     | Define el formato de almacenamiento utilizado por Loki.                   |
+| 10  | `index.period: 24h`               | Organiza el índice en periodos diarios.                                   |
+| 11  | `allow_structured_metadata: true` | Permite metadata estructurada adicional.                                  |
+| 12  | `reporting_enabled: false`        | Desactiva el envío de estadísticas de uso.                                |
 
 Docker monta el volumen `loki_data` en `/loki`. Por eso los logs sobreviven a `docker compose down`; se eliminan solamente si también se borra el volumen.
 
@@ -187,16 +189,16 @@ datasources:
     editable: false
 ```
 
-| Propiedad | Utilidad |
-|---|---|
-| `apiVersion: 1` | Versión del formato de provisioning de Grafana. |
-| `name` | Nombre mostrado en la interfaz. |
-| `uid` | Identificador estable del datasource. |
-| `type: loki` | Indica que la fuente de datos es Loki. |
-| `access: proxy` | Grafana realiza la consulta desde su servidor. |
-| `url: http://loki:3100` | Dirección interna de Loki dentro de la red Docker. |
-| `isDefault: true` | Selecciona Loki como datasource predeterminado. |
-| `editable: false` | Evita que la configuración declarada como código se cambie desde la interfaz. |
+| #   | Propiedad               | Utilidad                                                                      |
+|-----|-------------------------|-------------------------------------------------------------------------------|
+| 1   | `apiVersion: 1`         | Versión del formato de provisioning de Grafana.                               |
+| 2   | `name`                  | Nombre mostrado en la interfaz.                                               |
+| 3   | `uid`                   | Identificador estable del datasource.                                         |
+| 4   | `type: loki`            | Indica que la fuente de datos es Loki.                                        |
+| 5   | `access: proxy`         | Grafana realiza la consulta desde su servidor.                                |
+| 6   | `url: http://loki:3100` | Dirección interna de Loki dentro de la red Docker.                            |
+| 7   | `isDefault: true`       | Selecciona Loki como datasource predeterminado.                               |
+| 8   | `editable: false`       | Evita que la configuración declarada como código se cambie desde la interfaz. |
 
 `http://localhost:3100` no se utiliza aquí porque, desde el contenedor Grafana, `localhost` sería el propio Grafana. El nombre `loki` resuelve al contenedor correcto.
 
@@ -212,12 +214,12 @@ Grafana carga automáticamente el dashboard **Flujo de compra por Correlation ID
 
 El dashboard contiene:
 
-| Panel | Información |
-|---|---|
-| **1. Inicio de la Saga** | Muestra `action=saga_started` y el estado inicial de la orden. |
-| **2. Flujo cronológico estructurado** | Presenta una tabla con `Time`, `Service`, `Action`, `Event Type`, `Event ID`, `Topic`, `Order ID`, estados, `Exception Type` y `Error Message` desde antiguo hacia reciente. |
-| **3. Fin de la Saga** | Muestra la transición que terminó con `sagaStatus=COMPLETED`. |
-| **4. Logs técnicos originales** | Conserva el mensaje completo para revisar IDs, topics, particiones, offsets y stack traces. |
+| Panel                                 | Información                                                                        |
+|---------------------------------------|------------------------------------------------------------------------------------|
+| **1. Inicio de la Saga**              | Muestra `action=saga_started` y el estado inicial de la orden.                     |
+| **2. Flujo cronológico estructurado** | Tabla cronológica: hora, servicio, acción, evento, topic, pedido, estados y error. |
+| **3. Fin de la Saga**                 | Muestra la transición que terminó con `sagaStatus=COMPLETED`.                      |
+| **4. Logs técnicos originales**       | Mensaje completo: IDs, topics, particiones, offsets y stack traces.                |
 
 El filtro **Servicio** permite mostrar todos los participantes o limitar la línea temporal a Order, Inventory o Payment Service. El dashboard se actualiza cada cinco segundos.
 
@@ -225,22 +227,22 @@ Los logs ya almacenados conservan el timestamp anterior. La corrección se aplic
 
 ## 7. Propiedades principales de Docker Compose
 
-| Propiedad | Utilidad |
-|---|---|
-| `image` | Imagen y versión exacta del componente. |
-| `command` | Archivo de configuración y argumentos utilizados al iniciar. |
-| `ports` | Publica un puerto del contenedor en el Mac. |
-| `depends_on` | Inicia primero la dependencia indicada. No sustituye un health check. |
-| `volumes` | Conserva datos o comparte archivos entre el Mac y un contenedor. |
-| `environment` | Define variables de entorno del contenedor. |
+| #   | Propiedad     | Utilidad                                                              |
+|-----|---------------|-----------------------------------------------------------------------|
+| 1   | `image`       | Imagen y versión exacta del componente.                               |
+| 2   | `command`     | Archivo de configuración y argumentos utilizados al iniciar.          |
+| 3   | `ports`       | Publica un puerto del contenedor en el Mac.                           |
+| 4   | `depends_on`  | Inicia primero la dependencia indicada. No sustituye un health check. |
+| 5   | `volumes`     | Conserva datos o comparte archivos entre el Mac y un contenedor.      |
+| 6   | `environment` | Define variables de entorno del contenedor.                           |
 
 Los puertos publicados permiten abrir las interfaces desde el Mac:
 
-| Componente | Dirección |
-|---|---|
-| Grafana | `http://localhost:3000` |
-| Loki | `http://localhost:3100` |
-| Alloy | `http://localhost:12345` |
+| #   | Componente | Dirección                |
+|-----|------------|--------------------------|
+| 1   | Grafana    | `http://localhost:3000`  |
+| 2   | Loki       | `http://localhost:3100`  |
+| 3   | Alloy      | `http://localhost:12345` |
 
 ## Ejemplo completo
 

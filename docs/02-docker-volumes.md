@@ -23,11 +23,11 @@ services:
 
 Se interpreta de la siguiente manera:
 
-| Parte   | Valor                      | Función                                                 |
-|---------|----------------------------|---------------------------------------------------------|
-| Origen  | `auth_db_data`             | Lugar persistente administrado por Docker.              |
-| Destino | `/var/lib/postgresql/data` | Carpeta dentro del contenedor donde PostgreSQL trabaja. |
-| Permiso | No se especifica           | Docker utiliza lectura y escritura (`rw`) por defecto.  |
+| #   | Parte   | Valor                      | Función                                                 |
+|-----|---------|----------------------------|---------------------------------------------------------|
+| 1   | Origen  | `auth_db_data`             | Lugar persistente administrado por Docker.              |
+| 2   | Destino | `/var/lib/postgresql/data` | Carpeta dentro del contenedor donde PostgreSQL trabaja. |
+| 3   | Permiso | No se especifica           | Docker utiliza lectura y escritura (`rw`) por defecto.  |
 
 La configuración anterior equivale a:
 

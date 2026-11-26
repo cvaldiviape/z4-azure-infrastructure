@@ -48,13 +48,13 @@ Un **topic** es una secuencia de mensajes relacionados identificada por un nombr
 
 Los topics principales del proyecto son:
 
-| Topic | Publica | Consume | Propósito |
-|---|---|---|---|
-| `inventory-reservation-requests-topic` | Order Service | Inventory Service | Solicitar reserva o liberación de stock. |
-| `inventory-reservation-results-topic` | Inventory Service | Order Service | Informar el resultado de una reserva. |
-| `payment-processing-requests-topic` | Order Service | Payment Service | Solicitar el procesamiento de un pago. |
-| `payment-processing-results-topic` | Payment Service | Order Service | Informar si el pago fue aprobado o rechazado. |
-| `order-status-events-topic` | Order Service | Consumidores futuros | Informar cambios en el estado del pedido. |
+| #   | Topic                                  | Publica   | Consume   | Propósito                                     |
+|-----|----------------------------------------|-----------|-----------|-----------------------------------------------|
+| 1   | `inventory-reservation-requests-topic` | Order     | Inventory | Solicitar reserva o liberación de stock.      |
+| 2   | `inventory-reservation-results-topic`  | Inventory | Order     | Informar el resultado de una reserva.         |
+| 3   | `payment-processing-requests-topic`    | Order     | Payment   | Solicitar el procesamiento de un pago.        |
+| 4   | `payment-processing-results-topic`     | Payment   | Order     | Informar si el pago fue aprobado o rechazado. |
+| 5   | `order-status-events-topic`            | Order     | Pendiente | Informar cambios en el estado del pedido.     |
 
 Kafka conserva los mensajes aunque ya hayan sido consumidos. La retención depende de su configuración; consumir no equivale a eliminar.
 
@@ -78,12 +78,12 @@ En este proyecto, las solicitudes se agrupan en `*-requests-topic`, sus desenlac
 
 Cada registro de Kafka contiene principalmente:
 
-| Parte | Uso |
-|---|---|
-| `key` | Identifica mensajes relacionados y ayuda a elegir la partición. |
-| `value` | Contiene el evento, en este proyecto serializado como JSON. |
-| `headers` | Contiene metadatos adicionales; los DLT agregan información del error. |
-| `timestamp` | Indica cuándo Kafka registró el mensaje. |
+| #   | Parte       | Uso                                                                    |
+|-----|-------------|------------------------------------------------------------------------|
+| 1   | `key`       | Identifica mensajes relacionados y ayuda a elegir la partición.        |
+| 2   | `value`     | Contiene el evento, en este proyecto serializado como JSON.            |
+| 3   | `headers`   | Contiene metadatos adicionales; los DLT agregan información del error. |
+| 4   | `timestamp` | Indica cuándo Kafka registró el mensaje.                               |
 
 El `value` utiliza `IntegrationEventDto`, que incluye datos como:
 
@@ -168,6 +168,8 @@ Grupo inventory-service
 ```
 
 Si hay más consumers que particiones, algunos quedan sin trabajo. Si un consumer falla, Kafka redistribuye sus particiones entre los miembros restantes; este proceso se llama **rebalance**.
+
+La [guía 14](14-kafka-partitions-consumer-groups.md) profundiza en quién decide cada cosa, dónde se define el `group-id`, la relación entre instancias y consumers, y cómo elegir el número de particiones.
 
 ## Confirmación o acknowledgment
 
@@ -288,23 +290,23 @@ Kafka por sí solo no garantiza:
 
 ## Vocabulario rápido
 
-| Concepto | Definición corta |
-|---|---|
-| Broker | Servidor Kafka. |
-| Clúster | Conjunto de brokers. |
-| Topic | Canal duradero de mensajes. |
-| Partición | División ordenada de un topic. |
-| Réplica | Copia de una partición en otro broker. |
-| Producer | Aplicación que publica mensajes. |
-| Consumer | Aplicación que procesa mensajes. |
-| Consumer group | Identidad compartida que registra avance y reparte particiones. |
-| Offset | Posición de un mensaje dentro de una partición. |
-| Key | Dato usado para agrupar y asignar mensajes a particiones. |
-| Lag | Cantidad de mensajes que un grupo todavía no procesa. |
-| Acknowledgment | Confirmación del offset procesado. |
-| Rebalance | Redistribución de particiones entre consumers de un grupo. |
-| DLT | Topic donde se apartan mensajes que agotaron sus reintentos. |
-| Idempotencia | Capacidad de repetir una operación sin duplicar su efecto. |
+| #   | Concepto       | Definición corta                                                |
+|-----|----------------|-----------------------------------------------------------------|
+| 1   | Broker         | Servidor Kafka.                                                 |
+| 2   | Clúster        | Conjunto de brokers.                                            |
+| 3   | Topic          | Canal duradero de mensajes.                                     |
+| 4   | Partición      | División ordenada de un topic.                                  |
+| 5   | Réplica        | Copia de una partición en otro broker.                          |
+| 6   | Producer       | Aplicación que publica mensajes.                                |
+| 7   | Consumer       | Aplicación que procesa mensajes.                                |
+| 8   | Consumer group | Identidad compartida que registra avance y reparte particiones. |
+| 9   | Offset         | Posición de un mensaje dentro de una partición.                 |
+| 10  | Key            | Dato usado para agrupar y asignar mensajes a particiones.       |
+| 11  | Lag            | Cantidad de mensajes que un grupo todavía no procesa.           |
+| 12  | Acknowledgment | Confirmación del offset procesado.                              |
+| 13  | Rebalance      | Redistribución de particiones entre consumers de un grupo.      |
+| 14  | DLT            | Topic donde se apartan mensajes que agotaron sus reintentos.    |
+| 15  | Idempotencia   | Capacidad de repetir una operación sin duplicar su efecto.      |
 
 ## Orden recomendado para practicar
 

@@ -22,22 +22,22 @@ La consistencia es **eventual**: durante unos instantes cada servicio puede obse
 
 ## Responsabilidades
 
-| Servicio  | Responsabilidad en la Saga                                                                                          |
-|-----------|---------------------------------------------------------------------------------------------------------------------|
-| Order     | Crea el pedido y la instancia de Saga, emite comandos, consume resultados, actualiza estados y guarda el historial. |
-| Inventory | Reserva o libera stock y publica el resultado de la operación.                                                      |
-| Payment   | Procesa una solicitud de pago y publica si fue aprobada o rechazada.                                                |
-| Auth      | Autentica al cliente, pero no participa en el flujo Kafka de la Saga.                                               |
+| #   | Servicio  | Responsabilidad en la Saga                                                    |
+|-----|-----------|-------------------------------------------------------------------------------|
+| 1   | Order     | Crea pedido y Saga, emite comandos, consume resultados y guarda el historial. |
+| 2   | Inventory | Reserva o libera stock y publica el resultado de la operación.                |
+| 3   | Payment   | Procesa una solicitud de pago y publica si fue aprobada o rechazada.          |
+| 4   | Auth      | Autentica al cliente, pero no participa en el flujo Kafka de la Saga.         |
 
 ## Topics y mensajes
 
-| Topic                      | Productor | Consumidor                         | Tipos usados por la Saga                                  |
-|----------------------------|-----------|------------------------------------|-----------------------------------------------------------|
-| `inventory-reservation-requests-topic` | Order     | Inventory                          | `RESERVE_STOCK`, `RELEASE_STOCK`                          |
-| `inventory-reservation-results-topic`  | Inventory | Order                              | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
-| `payment-processing-requests-topic`    | Order     | Payment                            | `PAYMENT_REQUESTED`                                       |
-| `payment-processing-results-topic`     | Payment   | Order                              | `PAYMENT_APPROVED`, `PAYMENT_FAILED`                      |
-| `order-status-events-topic`            | Order     | Consumidores de eventos de pedidos | `ORDER_CANCELLED`                                         |
+| #   | Topic                                  | Productor | Consumidor | Tipos usados por la Saga                                  |
+|-----|----------------------------------------|-----------|------------|-----------------------------------------------------------|
+| 1   | `inventory-reservation-requests-topic` | Order     | Inventory  | `RESERVE_STOCK`, `RELEASE_STOCK`                          |
+| 2   | `inventory-reservation-results-topic`  | Inventory | Order      | `STOCK_RESERVED`, `STOCK_NOT_AVAILABLE`, `STOCK_RELEASED` |
+| 3   | `payment-processing-requests-topic`    | Order     | Payment    | `PAYMENT_REQUESTED`                                       |
+| 4   | `payment-processing-results-topic`     | Payment   | Order      | `PAYMENT_APPROVED`, `PAYMENT_FAILED`                      |
+| 5   | `order-status-events-topic`            | Order     | Pendiente  | `ORDER_CANCELLED`                                         |
 
 Los mensajes utilizan un contrato común con datos como `eventId`, `eventType`, `aggregateId`, `correlationId`, `previousEventId`, `producer`, `timestamp` y `payload`.
 
@@ -127,23 +127,27 @@ La compensación no es un rollback distribuido. `RELEASE_STOCK` es una nueva ope
 
 Order conserva tres vistas relacionadas:
 
-| Información       | Finalidad                                                                                                                                                 |
-|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Pedido            | Estado de negocio visible: `CREATED`, `PAYMENT_PENDING`, `CONFIRMED` o `CANCELLED`.                                                                       |
-| Saga              | Estado de coordinación: `STARTED`, `IN_PROGRESS`, `COMPENSATING`, `TIMED_OUT`, `COMPLETED` o `FAILED`; además conserva el paso actual y el último evento. |
-| Historial de Saga | Registra cada transición para seguimiento y diagnóstico.                                                                                                  |
+| #   | Información       | Finalidad                                                                   |
+|-----|-------------------|-----------------------------------------------------------------------------|
+| 1   | Pedido            | Estado de negocio: `CREATED`, `PAYMENT_PENDING`, `CONFIRMED` o `CANCELLED`. |
+| 2   | Saga              | Estado de coordinación, paso actual y último evento.                        |
+| 3   | Historial de Saga | Registra cada transición para seguimiento y diagnóstico.                    |
+
+Estados de la Saga: `STARTED`, `IN_PROGRESS`, `COMPENSATING`, `TIMED_OUT`, `COMPLETED` y `FAILED`.
 
 `PurchaseSagaServiceImpl` recibe los eventos de Inventory y Payment. Selecciona el comportamiento mediante `StockEventStrategyRegistry` o `PaymentEventStrategyRegistry`, y `PurchaseSagaStateManager` actualiza el pedido, la Saga y su historial.
 
 Las estrategias implementadas son:
 
-| Estrategia                       | Resultado                                                |
-|----------------------------------|----------------------------------------------------------|
-| `StockReservedEventStrategy`     | Avanza al pago y encola `PAYMENT_REQUESTED`.             |
-| `StockNotAvailableEventStrategy` | Cancela el pedido y encola `ORDER_CANCELLED`.            |
-| `PaymentApprovedEventStrategy`   | Confirma el pedido y completa la Saga.                   |
-| `PaymentFailedEventStrategy`     | Marca la Saga como compensando y encola `RELEASE_STOCK`. |
-| `StockReleasedEventStrategy`     | Cancela el pedido y completa la compensación.            |
+| #   | Estrategia                       | Resultado                                                |
+|-----|----------------------------------|----------------------------------------------------------|
+| 1   | `StockReservedEventStrategy`     | Avanza al pago y encola `PAYMENT_REQUESTED`.             |
+| 2   | `StockNotAvailableEventStrategy` | Cancela el pedido y encola `ORDER_CANCELLED`.            |
+| 3   | `PaymentApprovedEventStrategy`   | Confirma el pedido y completa la Saga.                   |
+| 4   | `PaymentFailedEventStrategy`     | Marca la Saga como compensando y encola `RELEASE_STOCK`. |
+| 5   | `StockReleasedEventStrategy`     | Cancela el pedido y completa la compensación.            |
+
+Qué se guarda en el historial y qué en el outbox (por qué `RESERVE_STOCK` no aparece en el historial): [22 · Historial de la Saga y outbox](22-saga-history-outbox.md).
 
 ## Timeout de Saga
 
@@ -159,12 +163,12 @@ Cuando una Saga supera el tiempo configurado:
 
 La columna de versión de `purchase_sagas` evita que el timeout sobrescriba silenciosamente una transición Kafka concurrente. Consulta [Control de concurrencia con `version`](03-database-strategy.md#control-de-concurrencia-con-version) para ver el `UPDATE` generado y un ejemplo completo de la carrera.
 
-| Propiedad | Variable | Valor predeterminado |
-|-----------------------------------------------|-------------------------------------------|--------------------|
-| `app.saga.timeout-milliseconds`               | `SAGA_TIMEOUT_MILLISECONDS`               | 300000 (5 minutos) |
-| `app.saga.timeout-batch-size`                 | `SAGA_TIMEOUT_BATCH_SIZE`                 | 100                |
-| `app.saga.timeout-poll-interval-milliseconds` | `SAGA_TIMEOUT_POLL_INTERVAL_MILLISECONDS` | 30000              |
-| `app.saga.timeout-initial-delay-milliseconds` | `SAGA_TIMEOUT_INITIAL_DELAY_MILLISECONDS` | 30000              |
+| #   | Propiedad                                     | Variable                                  | Valor predeterminado |
+|-----|-----------------------------------------------|-------------------------------------------|----------------------|
+| 1   | `app.saga.timeout-milliseconds`               | `SAGA_TIMEOUT_MILLISECONDS`               | 300000 (5 minutos)   |
+| 2   | `app.saga.timeout-batch-size`                 | `SAGA_TIMEOUT_BATCH_SIZE`                 | 100                  |
+| 3   | `app.saga.timeout-poll-interval-milliseconds` | `SAGA_TIMEOUT_POLL_INTERVAL_MILLISECONDS` | 30000                |
+| 4   | `app.saga.timeout-initial-delay-milliseconds` | `SAGA_TIMEOUT_INITIAL_DELAY_MILLISECONDS` | 30000                |
 
 El log `action=saga_timed_out` permite localizar cada caso por `correlationId` y `orderId`. La reconciliación puede utilizar directamente `current_step`, sin interpretar el texto de error, para decidir si corresponde reanudar, compensar o cerrar manualmente la compra. Un evento tardío o reproducido todavía puede llevar la Saga desde `TIMED_OUT` a `IN_PROGRESS`, `COMPENSATING` o `COMPLETED`; al hacerlo se limpia `timed_out_at`, y el Inbox evita repetir los efectos de un `eventId` que ya fue procesado.
 

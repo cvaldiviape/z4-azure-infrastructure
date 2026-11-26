@@ -51,15 +51,15 @@ PAYMENT_FAILED
 
 La reconciliación debe combinar varias fuentes utilizando `orderId`, `correlationId` y `eventId`:
 
-| Fuente | Pregunta que responde |
-|---|---|
-| `purchase_sagas` | ¿Cuál fue el último paso conocido por Order? |
-| `purchase_saga_histories` | ¿Qué transiciones observó Order y en qué orden? |
-| `outbox_events` | ¿El servicio todavía intenta publicar o Kafka ya confirmó el mensaje? |
-| `inbox_events` | ¿El servicio procesó este `eventId`? |
-| Datos de Inventory | ¿Existe una reserva y está reservada o liberada? |
-| Datos de Payment | ¿El pago no existe, fue aprobado o fue rechazado? |
-| Topics DLT | ¿El consumo agotó los reintentos? |
+| #   | Fuente                    | Pregunta que responde                                                 |
+|-----|---------------------------|-----------------------------------------------------------------------|
+| 1   | `purchase_sagas`          | ¿Cuál fue el último paso conocido por Order?                          |
+| 2   | `purchase_saga_histories` | ¿Qué transiciones observó Order y en qué orden?                       |
+| 3   | `outbox_events`           | ¿El servicio todavía intenta publicar o Kafka ya confirmó el mensaje? |
+| 4   | `inbox_events`            | ¿El servicio procesó este `eventId`?                                  |
+| 5   | Datos de Inventory        | ¿Existe una reserva y está reservada o liberada?                      |
+| 6   | Datos de Payment          | ¿El pago no existe, fue aprobado o fue rechazado?                     |
+| 7   | Topics DLT                | ¿El consumo agotó los reintentos?                                     |
 
 Un registro `PENDING` en Outbox y un mensaje en DLT no representan el mismo problema:
 
@@ -200,30 +200,30 @@ reconciliation_issues
 
 Tipos iniciales sugeridos:
 
-| Tipo | Significado |
-|---|---|
-| `OUTBOX_STILL_PENDING` | El relay todavía no confirmó la publicación. |
-| `INVENTORY_COMMAND_MISSING` | Inventory no presenta evidencia de haber procesado la reserva. |
-| `INVENTORY_RESPONSE_MISSING` | La reserva existe, pero Order no procesó su respuesta. |
-| `PAYMENT_REQUEST_MISSING` | Payment no presenta evidencia de la solicitud publicada. |
-| `PAYMENT_APPROVED_RESPONSE_MISSING` | Payment aprobó, pero Order no procesó la aprobación. |
-| `PAYMENT_FAILED_RESPONSE_MISSING` | Payment rechazó, pero Order no inició la compensación. |
-| `COMPENSATION_OUTBOX_PENDING` | `RELEASE_STOCK` todavía espera publicación. |
-| `STOCK_RELEASE_MISSING` | Inventory conserva la reserva después de publicarse la compensación. |
-| `STOCK_RELEASED_RESPONSE_MISSING` | Inventory liberó, pero Order no cerró la Saga. |
-| `MANUAL_INSPECTION_REQUIRED` | La evidencia es insuficiente o contradictoria. |
+| #   | Tipo                                | Significado                                                          |
+|-----|-------------------------------------|----------------------------------------------------------------------|
+| 1   | `OUTBOX_STILL_PENDING`              | El relay todavía no confirmó la publicación.                         |
+| 2   | `INVENTORY_COMMAND_MISSING`         | Inventory no presenta evidencia de haber procesado la reserva.       |
+| 3   | `INVENTORY_RESPONSE_MISSING`        | La reserva existe, pero Order no procesó su respuesta.               |
+| 4   | `PAYMENT_REQUEST_MISSING`           | Payment no presenta evidencia de la solicitud publicada.             |
+| 5   | `PAYMENT_APPROVED_RESPONSE_MISSING` | Payment aprobó, pero Order no procesó la aprobación.                 |
+| 6   | `PAYMENT_FAILED_RESPONSE_MISSING`   | Payment rechazó, pero Order no inició la compensación.               |
+| 7   | `COMPENSATION_OUTBOX_PENDING`       | `RELEASE_STOCK` todavía espera publicación.                          |
+| 8   | `STOCK_RELEASE_MISSING`             | Inventory conserva la reserva después de publicarse la compensación. |
+| 9   | `STOCK_RELEASED_RESPONSE_MISSING`   | Inventory liberó, pero Order no cerró la Saga.                       |
+| 10  | `MANUAL_INSPECTION_REQUIRED`        | La evidencia es insuficiente o contradictoria.                       |
 
 ## Acciones y responsabilidad
 
 La primera versión debe ser de diagnóstico. Puede sugerir una acción, pero no cambiar pedidos, pagos o reservas automáticamente:
 
-| Diagnóstico | Acción sugerida |
-|---|---|
-| Outbox `PENDING` | Mantener relay y alertar si supera su umbral. |
-| Comando o respuesta en DLT | Marcar como candidato a replay manual. |
-| Pago aprobado | Recuperar la respuesta; nunca compensar por silencio. |
-| Pago rechazado | Recuperar `PAYMENT_FAILED` para iniciar la compensación normal. |
-| Estado contradictorio | Revisión humana. |
+| #   | Diagnóstico                | Acción sugerida                                                 |
+|-----|----------------------------|-----------------------------------------------------------------|
+| 1   | Outbox `PENDING`           | Mantener relay y alertar si supera su umbral.                   |
+| 2   | Comando o respuesta en DLT | Marcar como candidato a replay manual.                          |
+| 3   | Pago aprobado              | Recuperar la respuesta; nunca compensar por silencio.           |
+| 4   | Pago rechazado             | Recuperar `PAYMENT_FAILED` para iniciar la compensación normal. |
+| 5   | Estado contradictorio      | Revisión humana.                                                |
 
 El operador o el futuro servicio de replay ejecutará la acción. Esta separación deja una auditoría clara:
 
