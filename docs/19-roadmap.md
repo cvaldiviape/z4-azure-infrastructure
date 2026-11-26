@@ -41,8 +41,35 @@ Separados por **quién los usa**:
 | #   | Front           | Usuario          | Alcance                      | Stack sugerido        |
 |-----|-----------------|------------------|------------------------------|-----------------------|
 | 1   | **Tienda**      | Comprador        | Un tenant (según el dominio) | Next.js o Astro (SEO) |
-| 2   | **Backoffice**  | Vendedor / admin | Solo su tenant               | Angular 17 + ng-zorro |
-| 3   | **Ops Console** | Yo, como técnico | Todos los tenants            | Angular 17 + ng-zorro |
+| 2   | **Backoffice**  | Vendedor / admin | Solo su tenant               | Angular 22 + Material |
+| 3   | **Ops Console** | Yo, como técnico | Todos los tenants            | Angular 22 + Material |
+
+Nombres: igual que los servicios terminan en `-service`, los fronts terminan en `-web`. Primero va el dominio y al final el tipo, así en GitHub se agrupan por dominio.
+
+| #   | Front       | Carpeta local              | Repo en GitHub             | Puerto local |
+|-----|-------------|----------------------------|----------------------------|--------------|
+| 1   | Ops Console | `frontend/ops-console-web` | `z4-azure-ops-console-web` | 4200         |
+| 2   | Backoffice  | `frontend/backoffice-web`  | `z4-azure-backoffice-web`  | 4201         |
+| 3   | Tienda      | `frontend/store-web`       | `z4-azure-store-web`       | 3001         |
+
+La tienda usa 3001 y no 3000, porque ahí está Grafana (con Next.js se arranca con `next dev -p 3001`; con Astro sería 4321). CORS hoy solo permite 4200 y 5173: al crear el Backoffice y la tienda hay que agregar sus puertos a `app.security.cors-allowed-origins`.
+
+### Base técnica de los fronts Angular
+
+Tomada del proyecto propio MangaGodWEB (Angular 14), adaptada a Angular 22 (Node 26 LTS, instalado con nvm):
+
+| #   | Tema        | Decisión                                                                              |
+|-----|-------------|---------------------------------------------------------------------------------------|
+| 1   | Componentes | Standalone, `@if`/`@for` en templates, signals, `*.routes.ts` y guards funcionales    |
+| 2   | Librería UI | Angular Material: tabla, paginador, formularios, diálogos, snackbar y chips           |
+| 3   | Estilos     | CSS propio en archivos aparte, sin Tailwind; clases con BEM (`sidebar__item--active`) |
+| 4   | Responsive  | El `grid.css` de 12 columnas de MangaGodWEB (`row`, `col-6`, `md:col-3`)              |
+| 5   | Variables   | Colores, espacios y breakpoints en `src/styles/variables.css`                         |
+| 6   | Reutilizado | Sidebar con submenú, layout responsive, navbar, `loading-button`, `snack-bar.service` |
+| 7   | Seguridad   | Carpeta `security/` con interceptores JWT y de error, `jwt.service` y guard de rol    |
+| 8   | Estructura  | `modules/<x>/{components,services,static}`, `models/{request,response}`, `shared/`    |
+
+Al sidebar de MangaGodWEB se le agrega un `path` opcional en `Item`, para ítems que navegan directo sin submenú. La línea de tiempo de la Saga es un componente propio, porque Material no trae uno.
 
 Por qué la Ops Console va aparte del backoffice:
 
